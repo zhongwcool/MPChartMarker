@@ -28,6 +28,8 @@ public class KLineEntry {
         BUY,
         SELL,
         PRICE,
-        NUMBER
+        NUMBER,
+        UP_TRIANGLE,    // 上三角，表示数据激增
+        DOWN_TRIANGLE   // 下三角，表示数据陡降
     }
 } 

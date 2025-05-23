@@ -5,6 +5,7 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.DashPathEffect;
 import android.graphics.Paint;
+import android.graphics.Path;
 import android.graphics.RectF;
 import android.graphics.Typeface;
 
@@ -122,6 +123,14 @@ public class KLineMarker implements IMarker {
                         markerPaint.setColor(Color.parseColor("#80BDBDBD")); // 半透明浅灰色
                         dashLinePaint.setColor(Color.parseColor("#BDBDBD")); // 虚线保持不透明
                         break;
+                    case UP_TRIANGLE:
+                        markerPaint.setColor(Color.parseColor("#FF5722")); // 橙红色，表示激增
+                        dashLinePaint.setColor(Color.parseColor("#FF5722"));
+                        break;
+                    case DOWN_TRIANGLE:
+                        markerPaint.setColor(Color.parseColor("#9C27B0")); // 紫色，表示陡降
+                        dashLinePaint.setColor(Color.parseColor("#9C27B0"));
+                        break;
                     default:
                         continue; // 没有标记类型，跳过
                 }
@@ -185,6 +194,22 @@ public class KLineMarker implements IMarker {
                         // 确保在安全范围内
                         markerScreenY = Math.max(safeTopY, Math.min(markerScreenY, safeBottomY));
                         break;
+                    case UP_TRIANGLE:
+                        // 上三角标记在高点上方
+                        float upTriangleHighY = (float) chart.getTransformer(chart.getAxisLeft().getAxisDependency())
+                                .getPixelForValues(x, entry.high).y;
+                        markerScreenY = upTriangleHighY - markerSize * 1.5f;
+                        markerScreenY = Math.max(markerScreenY, safeTopY);
+                        isMarkerOnTop = true;
+                        break;
+                    case DOWN_TRIANGLE:
+                        // 下三角标记在低点下方
+                        float downTriangleLowY = (float) chart.getTransformer(chart.getAxisLeft().getAxisDependency())
+                                .getPixelForValues(x, entry.low).y;
+                        markerScreenY = downTriangleLowY + markerSize * 1.5f;
+                        markerScreenY = Math.min(markerScreenY, safeBottomY);
+                        isMarkerOnTop = false;
+                        break;
                     default:
                         markerScreenY = screenTopY;
                         isMarkerOnTop = true;
@@ -210,14 +235,19 @@ public class KLineMarker implements IMarker {
                 // 检查并调整X坐标，确保标记不会超出左右边界
                 screenX = Math.max(safeLeftX, Math.min(screenX, safeRightX));
 
-                // 处理数字标记的特殊位置
-                if (entry.markerType == KLineEntry.MarkerType.NUMBER) {
-                    // 更新数字标记的X坐标，使其直接位于K线上方或下方
-                    float originalScreenX = (float) chart.getTransformer(chart.getAxisLeft().getAxisDependency())
-                            .getPixelForValues(x, (entry.high + entry.low) / 2).x;
-                    screenX = Math.max(safeLeftX, Math.min(originalScreenX, safeRightX));
+                // 处理数字标记和三角形标记的特殊位置（都使用短虚线）
+                if (entry.markerType == KLineEntry.MarkerType.NUMBER ||
+                        entry.markerType == KLineEntry.MarkerType.UP_TRIANGLE ||
+                        entry.markerType == KLineEntry.MarkerType.DOWN_TRIANGLE) {
 
-                    // 为数字标记绘制短虚线
+                    if (entry.markerType == KLineEntry.MarkerType.NUMBER) {
+                        // 更新数字标记的X坐标，使其直接位于K线上方或下方
+                        float originalScreenX = (float) chart.getTransformer(chart.getAxisLeft().getAxisDependency())
+                                .getPixelForValues(x, (entry.high + entry.low) / 2).x;
+                        screenX = Math.max(safeLeftX, Math.min(originalScreenX, safeRightX));
+                    }
+
+                    // 为数字标记和三角形标记绘制短虚线
                     float lineEndY;
                     if (isMarkerOnTop) {
                         lineEndY = lineStartY - shortLineLength;
@@ -276,28 +306,57 @@ public class KLineMarker implements IMarker {
                 // 最终检查标记位置，确保完全在边界内
                 markerScreenY = Math.max(safeTopY, Math.min(markerScreenY, safeBottomY));
 
-                // 绘制标记背景
-                float left = screenX - markerSize / 2;
-                float top = markerScreenY - markerSize / 2;
-                float right = screenX + markerSize / 2;
-                float bottom = markerScreenY + markerSize / 2;
-
-                RectF rectF = new RectF(left, top, right, bottom);
-                canvas.drawRoundRect(rectF, padding, padding, markerPaint);
-
-                // 根据标记类型设置文字颜色
-                if (entry.markerType == KLineEntry.MarkerType.NUMBER) {
-                    textPaint.setColor(Color.parseColor("#424242")); // 深灰色文字，在浅色背景上更清晰
+                // 根据标记类型选择绘制方式
+                if (entry.markerType == KLineEntry.MarkerType.UP_TRIANGLE ||
+                        entry.markerType == KLineEntry.MarkerType.DOWN_TRIANGLE) {
+                    // 绘制三角形标记
+                    drawTriangleMarker(canvas, screenX, markerScreenY, entry.markerType);
                 } else {
-                    textPaint.setColor(Color.WHITE); // 其他标记保持白色文字
+                    // 绘制普通方块标记
+                    float left = screenX - markerSize / 2;
+                    float top = markerScreenY - markerSize / 2;
+                    float right = screenX + markerSize / 2;
+                    float bottom = markerScreenY + markerSize / 2;
+
+                    RectF rectF = new RectF(left, top, right, bottom);
+                    canvas.drawRoundRect(rectF, padding, padding, markerPaint);
+
+                    // 根据标记类型设置文字颜色
+                    if (entry.markerType == KLineEntry.MarkerType.NUMBER) {
+                        textPaint.setColor(Color.parseColor("#424242")); // 深灰色文字，在浅色背景上更清晰
+                    } else {
+                        textPaint.setColor(Color.WHITE); // 其他标记保持白色文字
+                    }
+
+                    // 绘制标记文本
+                    float textX = screenX;
+                    float textY = markerScreenY + (textPaint.getTextSize() / 3); // 文本垂直居中
+
+                    canvas.drawText(entry.markerText, textX, textY, textPaint);
                 }
-
-                // 绘制标记文本
-                float textX = screenX;
-                float textY = markerScreenY + (textPaint.getTextSize() / 3); // 文本垂直居中
-
-                canvas.drawText(entry.markerText, textX, textY, textPaint);
             }
         }
+    }
+
+    // 绘制三角形标记的方法
+    private void drawTriangleMarker(Canvas canvas, float centerX, float centerY, KLineEntry.MarkerType type) {
+        Path trianglePath = new Path();
+        float triangleSize = markerSize * 0.8f; // 三角形稍小一些
+
+        if (type == KLineEntry.MarkerType.UP_TRIANGLE) {
+            // 绘制向上的三角形
+            trianglePath.moveTo(centerX, centerY - triangleSize / 2); // 顶点
+            trianglePath.lineTo(centerX - triangleSize / 2, centerY + triangleSize / 2); // 左下角
+            trianglePath.lineTo(centerX + triangleSize / 2, centerY + triangleSize / 2); // 右下角
+            trianglePath.close();
+        } else if (type == KLineEntry.MarkerType.DOWN_TRIANGLE) {
+            // 绘制向下的三角形
+            trianglePath.moveTo(centerX, centerY + triangleSize / 2); // 底点
+            trianglePath.lineTo(centerX - triangleSize / 2, centerY - triangleSize / 2); // 左上角
+            trianglePath.lineTo(centerX + triangleSize / 2, centerY - triangleSize / 2); // 右上角
+            trianglePath.close();
+        }
+
+        canvas.drawPath(trianglePath, markerPaint);
     }
 } 

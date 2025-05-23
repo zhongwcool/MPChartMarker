@@ -11,6 +11,7 @@ import android.view.ViewGroup;
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.alex.mpchart.marker.data.model.KLineEntry;
 import com.alex.mpchart.marker.databinding.FragmentHomeBinding;
@@ -30,8 +31,11 @@ import com.github.mikephil.charting.listener.OnChartGestureListener;
 import com.github.mikephil.charting.renderer.CombinedChartRenderer;
 import com.github.mikephil.charting.utils.ViewPortHandler;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 public class HomeFragment extends Fragment {
 
@@ -41,6 +45,7 @@ public class HomeFragment extends Fragment {
     private BarChart volumeChart;
     private KLineMarker kLineMarker;
     private List<KLineEntry> kLineEntries;
+    private SwipeRefreshLayout swipeRefreshLayout;
 
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
@@ -49,6 +54,10 @@ public class HomeFragment extends Fragment {
 
         homeViewModel = new ViewModelProvider(this).get(HomeViewModel.class);
 
+        // 初始化SwipeRefreshLayout
+        swipeRefreshLayout = binding.swipeRefreshLayout;
+        setupSwipeRefresh();
+
         // 先获取图表引用
         combinedChart = binding.combinedChart;
         volumeChart = binding.barChart;
@@ -56,9 +65,36 @@ public class HomeFragment extends Fragment {
         // 设置图表联动
         setupChartLinkage();
 
+        // 观察数据变化
         homeViewModel.getKLineData().observe(getViewLifecycleOwner(), this::showCharts);
 
+        // 观察刷新状态
+        homeViewModel.getIsRefreshing().observe(getViewLifecycleOwner(), isRefreshing -> {
+            swipeRefreshLayout.setRefreshing(isRefreshing);
+        });
+
         return root;
+    }
+
+    private void setupSwipeRefresh() {
+        // 设置下拉刷新的颜色
+        swipeRefreshLayout.setColorSchemeResources(
+                android.R.color.holo_blue_bright,
+                android.R.color.holo_green_light,
+                android.R.color.holo_orange_light,
+                android.R.color.holo_red_light
+        );
+
+        // 设置下拉刷新的背景色
+        swipeRefreshLayout.setProgressBackgroundColorSchemeResource(android.R.color.white);
+
+        // 设置下拉距离
+        swipeRefreshLayout.setDistanceToTriggerSync(200);
+
+        // 设置刷新监听器
+        swipeRefreshLayout.setOnRefreshListener(() -> {
+            homeViewModel.refreshData();
+        });
     }
 
     private void setupChartLinkage() {
@@ -154,6 +190,13 @@ public class HomeFragment extends Fragment {
 
     private void showCharts(List<KLineEntry> data) {
         this.kLineEntries = data;
+
+        // 更新时间显示
+        SimpleDateFormat sdf = new SimpleDateFormat("MM-dd HH:mm:ss", Locale.getDefault());
+        String updateTime = "最后更新: " + sdf.format(new Date());
+        binding.textHome.setText(updateTime);
+        binding.textHome.setVisibility(View.VISIBLE);
+        
         showKLineChart(data);
         showVolumeChart(data);
     }
