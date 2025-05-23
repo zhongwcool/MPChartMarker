@@ -44,6 +44,7 @@ public class HomeFragment extends Fragment {
     private CombinedChart combinedChart;
     private BarChart volumeChart;
     private KLineMarker kLineMarker;
+    private TrendRegionDrawer trendRegionDrawer;
     private List<KLineEntry> kLineEntries;
     private SwipeRefreshLayout swipeRefreshLayout;
 
@@ -291,10 +292,12 @@ public class HomeFragment extends Fragment {
         // 设置数据
         combinedChart.setData(combinedData);
 
-        // 创建并设置标记
+        // 创建并设置标记和背景绘制器
         kLineMarker = new KLineMarker(getContext(), combinedChart, data);
+        trendRegionDrawer = new TrendRegionDrawer(getContext(), combinedChart, data);
         combinedChart.setRenderer(new CustomCombinedChartRenderer(combinedChart,
-                combinedChart.getAnimator(), combinedChart.getViewPortHandler(), kLineMarker));
+                combinedChart.getAnimator(), combinedChart.getViewPortHandler(),
+                kLineMarker, trendRegionDrawer));
 
         // 设置可视范围 - 在设置数据后设置
         combinedChart.setVisibleXRangeMaximum(50);
@@ -312,20 +315,29 @@ public class HomeFragment extends Fragment {
     // 自定义渲染器，用于绘制标记
     private class CustomCombinedChartRenderer extends CombinedChartRenderer {
         private final KLineMarker marker;
+        private final TrendRegionDrawer trendRegionDrawer;
 
         public CustomCombinedChartRenderer(CombinedChart chart,
                                            com.github.mikephil.charting.animation.ChartAnimator animator,
                                            ViewPortHandler viewPortHandler,
-                                           KLineMarker marker) {
+                                           KLineMarker marker,
+                                           TrendRegionDrawer trendRegionDrawer) {
             super(chart, animator, viewPortHandler);
             this.marker = marker;
+            this.trendRegionDrawer = trendRegionDrawer;
         }
 
         @Override
         public void drawData(Canvas c) {
+            // 先绘制趋势区间背景
+            if (trendRegionDrawer != null) {
+                trendRegionDrawer.drawTrendRegions(c);
+            }
+
+            // 再绘制K线数据
             super.drawData(c);
 
-            // 在绘制完数据后绘制标记
+            // 最后绘制标记（在K线之上）
             if (marker != null) {
                 marker.drawMarkers(c);
             }

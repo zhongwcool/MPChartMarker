@@ -8,6 +8,7 @@ import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.RectF;
 import android.graphics.Typeface;
+import android.util.Log;
 
 import com.alex.mpchart.marker.data.model.KLineEntry;
 import com.github.mikephil.charting.charts.CombinedChart;
@@ -77,9 +78,25 @@ public class KLineMarker implements IMarker {
 
     // 自定义方法：绘制所有标记
     public void drawMarkers(Canvas canvas) {
+        Log.d("KLineMarker", "drawMarkers called, entries size: " + entries.size());
+        
         // 获取图表可见区域的范围
         int minIndex = Math.max(0, (int) chart.getLowestVisibleX());
         int maxIndex = Math.min(entries.size() - 1, (int) chart.getHighestVisibleX());
+
+        Log.d("KLineMarker", "Visible range: " + minIndex + " to " + maxIndex);
+
+        // 计算有多少个标记需要绘制
+        int markerCount = 0;
+        for (int i = minIndex; i <= maxIndex; i++) {
+            KLineEntry entry = entries.get(i);
+            if (entry.hasMarker) {
+                markerCount++;
+                Log.d("KLineMarker", "Found marker at index " + i + ", type: " + entry.markerType + ", text: " + entry.markerText);
+            }
+        }
+
+        Log.d("KLineMarker", "Total markers to draw: " + markerCount);
 
         // 获取图表顶部和底部Y轴值对应的屏幕坐标
         float topY = chart.getAxisLeft().getAxisMaximum();
@@ -114,10 +131,6 @@ public class KLineMarker implements IMarker {
                     case SELL:
                         markerPaint.setColor(Color.parseColor("#F44336")); // 红色
                         dashLinePaint.setColor(Color.parseColor("#F44336")); // 虚线也用相同颜色
-                        break;
-                    case PRICE:
-                        markerPaint.setColor(Color.parseColor("#2196F3")); // 蓝色
-                        dashLinePaint.setColor(Color.parseColor("#2196F3")); // 虚线也用相同颜色
                         break;
                     case NUMBER:
                         markerPaint.setColor(Color.parseColor("#80BDBDBD")); // 半透明浅灰色
@@ -161,16 +174,6 @@ public class KLineMarker implements IMarker {
                         // 确保不超出安全范围
                         markerScreenY = Math.max(markerScreenY, safeTopY);
                         isMarkerOnTop = true;
-                        break;
-                    case PRICE:
-                        // 价格标记根据K线的位置放在中间区域，上下错开
-                        if (i % 2 == 0) {
-                            markerScreenY = safeTopY + (safeBottomY - safeTopY) * 0.25f;
-                            isMarkerOnTop = true;
-                        } else {
-                            markerScreenY = safeTopY + (safeBottomY - safeTopY) * 0.75f;
-                            isMarkerOnTop = false;
-                        }
                         break;
                     case NUMBER:
                         // 数字标记直接放在K线上，根据奇偶性放在不同位置避免重叠
@@ -263,7 +266,7 @@ public class KLineMarker implements IMarker {
                         markerScreenY = lineEndY + markerSize / 2;
                     }
                 } else {
-                    // 对于买入卖出点和价格标记，计算虚线终点
+                    // 对于买入卖出点，计算虚线终点
                     float lineEndY;
 
                     // 根据标记位置确定虚线方向
@@ -311,8 +314,11 @@ public class KLineMarker implements IMarker {
                         entry.markerType == KLineEntry.MarkerType.DOWN_TRIANGLE) {
                     // 绘制三角形标记
                     drawTriangleMarker(canvas, screenX, markerScreenY, entry.markerType);
+                } else if (entry.markerType == KLineEntry.MarkerType.NUMBER) {
+                    // 绘制数字标记：引出线 + 文字
+                    drawNumberMarker(canvas, screenX, markerScreenY, entry.markerText, isMarkerOnTop);
                 } else {
-                    // 绘制普通方块标记
+                    // 绘制普通方块标记（买入、卖出）
                     float left = screenX - markerSize / 2;
                     float top = markerScreenY - markerSize / 2;
                     float right = screenX + markerSize / 2;
@@ -321,12 +327,8 @@ public class KLineMarker implements IMarker {
                     RectF rectF = new RectF(left, top, right, bottom);
                     canvas.drawRoundRect(rectF, padding, padding, markerPaint);
 
-                    // 根据标记类型设置文字颜色
-                    if (entry.markerType == KLineEntry.MarkerType.NUMBER) {
-                        textPaint.setColor(Color.parseColor("#424242")); // 深灰色文字，在浅色背景上更清晰
-                    } else {
-                        textPaint.setColor(Color.WHITE); // 其他标记保持白色文字
-                    }
+                    // 其他标记保持白色文字
+                    textPaint.setColor(Color.WHITE);
 
                     // 绘制标记文本
                     float textX = screenX;
@@ -358,5 +360,50 @@ public class KLineMarker implements IMarker {
         }
 
         canvas.drawPath(trianglePath, markerPaint);
+    }
+
+    // 绘制数字标记的方法
+    private void drawNumberMarker(Canvas canvas, float centerX, float centerY, String text, boolean isMarkerOnTop) {
+        // 计算引出线的起点（K线上的点）
+        float lineStartX = centerX;
+        float lineStartY;
+
+        // 计算引出线的终点（数字显示位置）
+        float lineEndX = centerX + markerSize * 1.5f; // 向右偏移1.5个标记大小
+        float lineEndY;
+
+        if (isMarkerOnTop) {
+            // 标记在上方，引出线从K线高点向上右方向延伸
+            lineStartY = centerY + shortLineLength; // 从短虚线的终点开始
+            lineEndY = centerY - markerSize * 0.8f; // 向上延伸
+        } else {
+            // 标记在下方，引出线从K线低点向下右方向延伸
+            lineStartY = centerY - shortLineLength; // 从短虚线的终点开始
+            lineEndY = centerY + markerSize * 0.8f; // 向下延伸
+        }
+
+        // 创建引出线的画笔
+        Paint linePaint = new Paint();
+        linePaint.setColor(Color.parseColor("#666666")); // 灰色引出线
+        linePaint.setStrokeWidth(1.5f);
+        linePaint.setAntiAlias(true);
+
+        // 绘制引出线（从K线指向数字位置的斜线）
+        canvas.drawLine(lineStartX, lineStartY, lineEndX, lineEndY, linePaint);
+
+        // 设置文字样式
+        Paint numberTextPaint = new Paint();
+        numberTextPaint.setColor(Color.parseColor("#333333")); // 深灰色文字
+        numberTextPaint.setTextSize(textPaint.getTextSize()); // 与其他标记文字大小一致
+        numberTextPaint.setAntiAlias(true);
+        numberTextPaint.setTypeface(Typeface.DEFAULT_BOLD); // 粗体文字
+        numberTextPaint.setTextAlign(Paint.Align.LEFT); // 左对齐，因为文字在线的右侧
+
+        // 计算文字位置（在引出线终点的右侧）
+        float textX = lineEndX + markerSize * 0.3f; // 在线终点右侧留一点间距
+        float textY = lineEndY + numberTextPaint.getTextSize() / 3; // 文本垂直居中
+
+        // 绘制文字
+        canvas.drawText(text, textX, textY, numberTextPaint);
     }
 } 
