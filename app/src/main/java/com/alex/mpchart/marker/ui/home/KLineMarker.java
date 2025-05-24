@@ -79,18 +79,19 @@ public class KLineMarker implements IMarker {
     // 自定义方法：绘制所有标记
     public void drawMarkers(Canvas canvas) {
         Log.d("KLineMarker", "drawMarkers called, entries size: " + entries.size());
-        
-        // 获取图表可见区域的范围
-        int minIndex = Math.max(0, (int) chart.getLowestVisibleX());
-        int maxIndex = Math.min(entries.size() - 1, (int) chart.getHighestVisibleX());
 
-        Log.d("KLineMarker", "Visible range: " + minIndex + " to " + maxIndex);
+        // 获取图表可见区域的时间范围
+        float minTime = chart.getLowestVisibleX();
+        float maxTime = chart.getHighestVisibleX();
+
+        Log.d("KLineMarker", "Visible time range: " + minTime + " to " + maxTime);
 
         // 计算有多少个标记需要绘制
         int markerCount = 0;
-        for (int i = minIndex; i <= maxIndex; i++) {
+        for (int i = 0; i < entries.size(); i++) {
             KLineEntry entry = entries.get(i);
-            if (entry.hasMarker) {
+            // 检查该条目是否在可见时间范围内
+            if (entry.getXValue() >= minTime && entry.getXValue() <= maxTime && entry.hasMarker) {
                 markerCount++;
                 Log.d("KLineMarker", "Found marker at index " + i + ", type: " + entry.markerType + ", text: " + entry.markerText);
             }
@@ -116,11 +117,12 @@ public class KLineMarker implements IMarker {
         float safeLeftX = leftBoundary + markerSize;
         float safeRightX = rightBoundary - markerSize;
 
-        for (int i = minIndex; i <= maxIndex; i++) {
+        for (int i = 0; i < entries.size(); i++) {
             KLineEntry entry = entries.get(i);
-            if (entry.hasMarker) {
+            // 检查该条目是否在可见时间范围内且有标记
+            if (entry.getXValue() >= minTime && entry.getXValue() <= maxTime && entry.hasMarker) {
                 // 获取蜡烛图上的坐标
-                float x = i; // x坐标就是索引
+                float x = entry.getXValue(); // x坐标使用相对天数
 
                 // 设置标记颜色
                 switch (entry.markerType) {

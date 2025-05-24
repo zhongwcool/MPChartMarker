@@ -6,369 +6,275 @@ import android.graphics.Color;
 import android.graphics.LinearGradient;
 import android.graphics.Paint;
 import android.graphics.Path;
-import android.graphics.RectF;
 import android.graphics.Shader;
 import android.util.Log;
 
 import com.alex.mpchart.marker.data.model.KLineEntry;
+import com.alex.mpchart.marker.data.model.TrendRegion;
+import com.alex.mpchart.marker.utils.TrendRegionParser;
 import com.github.mikephil.charting.charts.CombinedChart;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+import java.util.Locale;
 
+/**
+ * 趋势区间绘制器
+ * 根据指定的时间范围绘制趋势背景
+ */
 public class TrendRegionDrawer {
     private static final String TAG = "TrendRegionDrawer";
-    private final Paint risingRegionPaint;
-    private final Paint fallingRegionPaint;
+    private final Paint trendRegionPaint;
     private final CombinedChart chart;
     private final List<KLineEntry> entries;
+    private List<TrendRegion> trendRegions;
 
     public TrendRegionDrawer(Context context, CombinedChart chart, List<KLineEntry> entries) {
         this.chart = chart;
         this.entries = entries;
+        this.trendRegions = new ArrayList<>();
 
-        // 初始化上涨区间画笔（渐变绿色背景）
-        risingRegionPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        risingRegionPaint.setStyle(Paint.Style.FILL);
-        risingRegionPaint.setColor(Color.parseColor("#4000C853")); // 25%透明度的绿色
-
-        // 初始化下跌区间画笔（渐变红色背景）
-        fallingRegionPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        fallingRegionPaint.setStyle(Paint.Style.FILL);
-        fallingRegionPaint.setColor(Color.parseColor("#40F44336")); // 25%透明度的红色
+        // 初始化趋势区间画笔
+        trendRegionPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        trendRegionPaint.setStyle(Paint.Style.FILL);
 
         Log.d(TAG, "TrendRegionDrawer initialized with " + entries.size() + " entries");
     }
 
+    /**
+     * 设置趋势区间数据
+     *
+     * @param trendRegions 趋势区间列表
+     */
+    public void setTrendRegions(List<TrendRegion> trendRegions) {
+        this.trendRegions = trendRegions != null ? trendRegions : new ArrayList<>();
+        Log.d(TAG, "Set " + this.trendRegions.size() + " trend regions");
+    }
+
+    /**
+     * 绘制趋势区间背景
+     */
     public void drawTrendRegions(Canvas canvas) {
-        Log.d(TAG, "drawTrendRegions called");
+        Log.d(TAG, "drawTrendRegions called with " + trendRegions.size() + " regions");
 
-        // 获取图表可见区域的范围
-        int minIndex = Math.max(0, (int) chart.getLowestVisibleX());
-        int maxIndex = Math.min(entries.size() - 1, (int) chart.getHighestVisibleX());
+        if (trendRegions.isEmpty()) {
+            Log.d(TAG, "No trend regions to draw");
+            return;
+        }
 
-        Log.d(TAG, "Visible range: " + minIndex + " to " + maxIndex);
+        // 获取图表可见区域的时间范围
+        float minTime = chart.getLowestVisibleX();
+        float maxTime = chart.getHighestVisibleX();
+
+        Log.d(TAG, "Visible time range: " + minTime + " to " + maxTime);
 
         // 获取图表边界
         float contentTop = chart.getViewPortHandler().contentTop();
         float contentBottom = chart.getViewPortHandler().contentBottom();
 
-        // 按区间ID分组收集趋势区间
-        Map<Integer, List<KLineEntry>> trendRegions = new HashMap<>();
+        // 为每个趋势区间绘制背景
+        for (int regionIndex = 0; regionIndex < trendRegions.size(); regionIndex++) {
+            TrendRegion region = trendRegions.get(regionIndex);
+            Log.d(TAG, "Processing region: " + region.toString());
 
-        for (int i = minIndex; i <= maxIndex; i++) {
-            KLineEntry entry = entries.get(i);
-            if (entry.isInTrendRegion && entry.regionId >= 0) {
-                trendRegions.computeIfAbsent(entry.regionId, k -> new ArrayList<>()).add(entry);
-                Log.d(TAG, "Found trend entry at index " + i + ", regionId=" + entry.regionId + ", type=" + entry.trendType);
+            // 查找该区间内的K线数据
+            List<KLineEntry> regionEntries = findEntriesInRegion(region, minTime, maxTime);
+
+            if (regionEntries.isEmpty()) {
+                Log.d(TAG, "No entries found in visible range for region: " + region.start + " to " + region.end);
+                continue;
             }
-        }
 
-        Log.d(TAG, "Drawing " + trendRegions.size() + " trend regions");
+            Log.d(TAG, "Found " + regionEntries.size() + " entries for region " + regionIndex);
 
-        // 如果没有找到趋势区间，强制绘制一些测试背景
-        if (trendRegions.isEmpty()) {
-            Log.d(TAG, "No trend regions found, drawing test backgrounds");
-            drawTestTrendShapes(canvas, minIndex, maxIndex, contentTop, contentBottom);
-        } else {
-            // 绘制每个趋势区间
-            for (List<KLineEntry> regionEntries : trendRegions.values()) {
-                if (regionEntries.isEmpty()) continue;
-
-                // 按索引排序确保正确的顺序
-                regionEntries.sort((a, b) -> Integer.compare(a.index, b.index));
-
-                KLineEntry.TrendType trendType = regionEntries.get(0).trendType;
-                Paint regionPaint = (trendType == KLineEntry.TrendType.RISING) ?
-                        risingRegionPaint : fallingRegionPaint;
-
-                Log.d(TAG, "Drawing region with " + regionEntries.size() + " entries, type=" + trendType);
-                drawTrendShadow(canvas, regionEntries, regionPaint, contentTop, contentBottom);
-            }
+            // 绘制区间背景
+            drawRegionBackground(canvas, regionEntries, region, contentTop, contentBottom, regionIndex);
         }
     }
 
     /**
-     * 绘制沿K线走势的阴影背景
+     * 查找指定趋势区间内的K线数据
      */
-    private void drawTrendShadow(Canvas canvas, List<KLineEntry> regionEntries,
-                                 Paint paint, float contentTop, float contentBottom) {
-        if (regionEntries.size() < 2) return;
+    private List<KLineEntry> findEntriesInRegion(TrendRegion region, float minTime, float maxTime) {
+        List<KLineEntry> regionEntries = new ArrayList<>();
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
 
-        KLineEntry.TrendType trendType = regionEntries.get(0).trendType;
+        for (int i = 0; i < entries.size(); i++) {
+            KLineEntry entry = entries.get(i);
 
-        // 创建路径
-        Path shadowPath = new Path();
-
-        // 获取x轴位置（图表底部）
-        float xAxisY = contentBottom;
-
-        // 获取第一个点的位置
-        KLineEntry firstEntry = regionEntries.get(0);
-        float startX = (float) chart.getTransformer(chart.getAxisLeft().getAxisDependency())
-                .getPixelForValues(firstEntry.index, 0).x;
-
-        // 从x轴开始路径
-        shadowPath.moveTo(startX, xAxisY);
-
-        // 收集所有边界点
-        List<Float> xPoints = new ArrayList<>();
-        List<Float> yPoints = new ArrayList<>();
-
-        // 沿着K线走势收集边界点
-        for (KLineEntry entry : regionEntries) {
-            float x = (float) chart.getTransformer(chart.getAxisLeft().getAxisDependency())
-                    .getPixelForValues(entry.index, 0).x;
-
-            float y;
-            if (trendType == KLineEntry.TrendType.RISING) {
-                // 上涨趋势：沿着高点绘制，增加一些向上的偏移让效果更明显
-                y = (float) chart.getTransformer(chart.getAxisLeft().getAxisDependency())
-                        .getPixelForValues(0, entry.high).y;
-                y = y - 10; // 向上偏移10像素，让阴影效果更突出
-            } else {
-                // 下跌趋势：沿着低点绘制，增加一些向下的偏移
-                y = (float) chart.getTransformer(chart.getAxisLeft().getAxisDependency())
-                        .getPixelForValues(0, entry.low).y;
-                y = y + 10; // 向下偏移10像素
-            }
-
-            // 确保在图表范围内
-            y = Math.max(y, contentTop);
-            y = Math.min(y, contentBottom);
-
-            xPoints.add(x);
-            yPoints.add(y);
-        }
-
-        // 使用平滑曲线连接点（贝塞尔曲线近似）
-        if (xPoints.size() >= 2) {
-            // 移动到第一个点
-            shadowPath.lineTo(xPoints.get(0), yPoints.get(0));
-
-            if (xPoints.size() == 2) {
-                // 只有两个点，直接连线
-                shadowPath.lineTo(xPoints.get(1), yPoints.get(1));
-            } else {
-                // 多个点，使用二次贝塞尔曲线平滑连接
-                for (int i = 0; i < xPoints.size() - 1; i++) {
-                    float x1 = xPoints.get(i);
-                    float y1 = yPoints.get(i);
-                    float x2 = xPoints.get(i + 1);
-                    float y2 = yPoints.get(i + 1);
-
-                    if (i == 0) {
-                        // 第一段：从起点到第一个控制点
-                        float controlX = x1 + (x2 - x1) * 0.5f;
-                        float controlY = y1;
-                        shadowPath.quadTo(controlX, controlY, (x1 + x2) * 0.5f, (y1 + y2) * 0.5f);
-                    } else if (i == xPoints.size() - 2) {
-                        // 最后一段：从当前中点到终点
-                        float controlX = x1 + (x2 - x1) * 0.5f;
-                        float controlY = y2;
-                        shadowPath.quadTo(controlX, controlY, x2, y2);
-                    } else {
-                        // 中间段：平滑连接
-                        float controlX = (x1 + x2) * 0.5f;
-                        float controlY = (y1 + y2) * 0.5f;
-                        shadowPath.quadTo(x1, y1, controlX, controlY);
+            // 检查该K线条目是否在可见时间范围内
+            if (entry.getXValue() >= minTime && entry.getXValue() <= maxTime) {
+                // 检查该K线条目是否在趋势区间的时间范围内
+                if (entry.date != null) {
+                    String entryDateStr = dateFormat.format(entry.date);
+                    if (region.containsDate(entryDateStr)) {
+                        regionEntries.add(entry);
+                        Log.d(TAG, "Entry " + i + " (date: " + entryDateStr + ") is in region " + region.start + " to " + region.end);
                     }
                 }
             }
         }
 
-        // 获取最后一个点的位置
-        KLineEntry lastEntry = regionEntries.get(regionEntries.size() - 1);
-        float endX = (float) chart.getTransformer(chart.getAxisLeft().getAxisDependency())
-                .getPixelForValues(lastEntry.index, 0).x;
-
-        // 从最后一个点回到x轴，闭合路径
-        shadowPath.lineTo(endX, xAxisY);
-        shadowPath.close();
-
-        // 创建增强的渐变效果
-        LinearGradient gradient;
-        if (trendType == KLineEntry.TrendType.RISING) {
-            // 上涨趋势：三色渐变，顶部透明，中部微绿，底部较浓绿色
-            gradient = new LinearGradient(
-                    0, contentTop, 0, xAxisY,
-                    new int[]{
-                            Color.parseColor("#0000C853"), // 完全透明的绿色
-                            Color.parseColor("#2000C853"), // 12%透明度的绿色
-                            Color.parseColor("#5000C853")  // 31%透明度的绿色
-                    },
-                    new float[]{0f, 0.3f, 1f}, // 渐变位置
-                    Shader.TileMode.CLAMP
-            );
-        } else {
-            // 下跌趋势：三色渐变，顶部较浓红色，中部微红，底部透明
-            gradient = new LinearGradient(
-                    0, contentTop, 0, xAxisY,
-                    new int[]{
-                            Color.parseColor("#50F44336"), // 31%透明度的红色
-                            Color.parseColor("#20F44336"), // 12%透明度的红色
-                            Color.parseColor("#00F44336")  // 完全透明的红色
-                    },
-                    new float[]{0f, 0.7f, 1f}, // 渐变位置
-                    Shader.TileMode.CLAMP
-            );
-        }
-
-        paint.setShader(gradient);
-
-        // 绘制阴影路径
-        canvas.drawPath(shadowPath, paint);
-
-        // 清除shader
-        paint.setShader(null);
-
-        Log.d(TAG, "Drew smooth trend shadow for " + regionEntries.size() + " entries, type=" + trendType);
+        return regionEntries;
     }
 
     /**
-     * 绘制测试趋势形状，用于验证绘制功能
+     * 绘制区间背景
      */
-    private void drawTestTrendShapes(Canvas canvas, int minIndex, int maxIndex, float contentTop, float contentBottom) {
-        float xAxisY = contentBottom;
+    private void drawRegionBackground(Canvas canvas, List<KLineEntry> regionEntries,
+                                      TrendRegion region, float contentTop, float contentBottom, int regionIndex) {
+        if (regionEntries.isEmpty()) return;
 
-        // 测试上涨趋势阴影（索引10-15）
-        if (minIndex <= 15 && maxIndex >= 10) {
-            Path testRisingPath = new Path();
+        Log.d(TAG, "Drawing region background for " + regionEntries.size() + " entries");
 
-            int startIdx = Math.max(10, minIndex);
-            int endIdx = Math.min(15, maxIndex);
+        // 使用渐变背景色方案
+        int baseColor = Color.parseColor("#F44336"); // 红色
 
-            // 从x轴开始
-            float startX = (float) chart.getTransformer(chart.getAxisLeft().getAxisDependency())
-                    .getPixelForValues(startIdx, 0).x;
-            testRisingPath.moveTo(startX, xAxisY);
+        // 创建路径来绘制沿K线走势的背景
+        Path backgroundPath = new Path();
 
-            // 创建模拟的上涨趋势线
-            for (int i = startIdx; i <= endIdx; i++) {
-                float x = (float) chart.getTransformer(chart.getAxisLeft().getAxisDependency())
-                        .getPixelForValues(i, 0).x;
+        // 添加一些边距
+        float dayMargin = 0.5f;
 
-                // 模拟逐渐上升的高点
-                float progress = (float) (i - startIdx) / (endIdx - startIdx);
-                float y = contentTop + (contentBottom - contentTop) * (0.3f - progress * 0.2f);
-
-                testRisingPath.lineTo(x, y);
-            }
-
-            // 回到x轴闭合
-            float endX = (float) chart.getTransformer(chart.getAxisLeft().getAxisDependency())
-                    .getPixelForValues(endIdx, 0).x;
-            testRisingPath.lineTo(endX, xAxisY);
-            testRisingPath.close();
-
-            // 设置渐变
-            LinearGradient risingGradient = new LinearGradient(
-                    0, contentTop, 0, xAxisY,
-                    Color.parseColor("#0000C853"),
-                    Color.parseColor("#6000C853"),
-                    Shader.TileMode.CLAMP
-            );
-            risingRegionPaint.setShader(risingGradient);
-
-            canvas.drawPath(testRisingPath, risingRegionPaint);
-            risingRegionPaint.setShader(null);
-
-            Log.d(TAG, "Drew test rising trend shadow");
-        }
-
-        // 测试下跌趋势阴影（索引25-30）
-        if (minIndex <= 30 && maxIndex >= 25) {
-            Path testFallingPath = new Path();
-
-            int startIdx = Math.max(25, minIndex);
-            int endIdx = Math.min(30, maxIndex);
-
-            // 从x轴开始
-            float startX = (float) chart.getTransformer(chart.getAxisLeft().getAxisDependency())
-                    .getPixelForValues(startIdx, 0).x;
-            testFallingPath.moveTo(startX, xAxisY);
-
-            // 创建模拟的下跌趋势线
-            for (int i = startIdx; i <= endIdx; i++) {
-                float x = (float) chart.getTransformer(chart.getAxisLeft().getAxisDependency())
-                        .getPixelForValues(i, 0).x;
-
-                // 模拟逐渐下降的低点
-                float progress = (float) (i - startIdx) / (endIdx - startIdx);
-                float y = contentTop + (contentBottom - contentTop) * (0.5f + progress * 0.3f);
-
-                testFallingPath.lineTo(x, y);
-            }
-
-            // 回到x轴闭合
-            float endX = (float) chart.getTransformer(chart.getAxisLeft().getAxisDependency())
-                    .getPixelForValues(endIdx, 0).x;
-            testFallingPath.lineTo(endX, xAxisY);
-            testFallingPath.close();
-
-            // 设置渐变
-            LinearGradient fallingGradient = new LinearGradient(
-                    0, contentTop, 0, xAxisY,
-                    Color.parseColor("#60F44336"),
-                    Color.parseColor("#00F44336"),
-                    Shader.TileMode.CLAMP
-            );
-            fallingRegionPaint.setShader(fallingGradient);
-
-            canvas.drawPath(testFallingPath, fallingRegionPaint);
-            fallingRegionPaint.setShader(null);
-
-            Log.d(TAG, "Drew test falling trend shadow");
-        }
-    }
-
-    /**
-     * 绘制趋势区间背景（旧版本，保留作为备份）
-     */
-    private void drawTrendBackground(Canvas canvas, List<KLineEntry> regionEntries,
-                                     Paint paint, float contentTop, float contentBottom) {
-        if (regionEntries.size() < 2) return;
-
+        // 获取区间的起始和结束X坐标（确保左右边界平行）
         KLineEntry firstEntry = regionEntries.get(0);
         KLineEntry lastEntry = regionEntries.get(regionEntries.size() - 1);
-
-        // 获取区间的起始和结束X坐标
+        
         float startX = (float) chart.getTransformer(chart.getAxisLeft().getAxisDependency())
-                .getPixelForValues(firstEntry.index - 0.5f, 0).x; // 稍微向左扩展
+                .getPixelForValues(firstEntry.getXValue() - dayMargin, 0).x;
         float endX = (float) chart.getTransformer(chart.getAxisLeft().getAxisDependency())
-                .getPixelForValues(lastEntry.index + 0.5f, 0).x; // 稍微向右扩展
+                .getPixelForValues(lastEntry.getXValue() + dayMargin, 0).x;
 
-        // 获取区间内的最高点和最低点
-        float maxHigh = Float.MIN_VALUE;
-        float minLow = Float.MAX_VALUE;
+        // 从左下角开始
+        backgroundPath.moveTo(startX, contentBottom);
 
-        for (KLineEntry entry : regionEntries) {
-            maxHigh = Math.max(maxHigh, entry.high);
-            minLow = Math.min(minLow, entry.low);
+        // 计算平滑的上边沿点（使用开盘价和收盘价的中点，向下偏移3dp）
+        List<Float> smoothedMidPoints = calculateSmoothedMidPoints(regionEntries);
+
+        // 沿着平滑的中点绘制上边沿
+        for (int i = 0; i < regionEntries.size(); i++) {
+            KLineEntry entry = regionEntries.get(i);
+            float smoothedMidPoint = smoothedMidPoints.get(i);
+
+            // 使用平滑后的中点作为上边沿
+            float x = (float) chart.getTransformer(chart.getAxisLeft().getAxisDependency())
+                    .getPixelForValues(entry.getXValue(), smoothedMidPoint).x;
+            float y = (float) chart.getTransformer(chart.getAxisLeft().getAxisDependency())
+                    .getPixelForValues(entry.getXValue(), smoothedMidPoint).y;
+
+            // 向下偏移3dp
+            float density = chart.getContext().getResources().getDisplayMetrics().density;
+            float offsetDp = 8 * density; // 8dp转换为像素
+            y += offsetDp;
+
+            if (i == 0) {
+                // 第一个点，先连接到左上角，再到平滑中点
+                backgroundPath.lineTo(startX, y);
+                backgroundPath.lineTo(x, y);
+            } else {
+                // 使用二次贝塞尔曲线连接到当前点，创建更平滑的效果
+                KLineEntry prevEntry = regionEntries.get(i - 1);
+                float prevSmoothedMidPoint = smoothedMidPoints.get(i - 1);
+                float prevX = (float) chart.getTransformer(chart.getAxisLeft().getAxisDependency())
+                        .getPixelForValues(prevEntry.getXValue(), prevSmoothedMidPoint).x;
+                float prevY = (float) chart.getTransformer(chart.getAxisLeft().getAxisDependency())
+                        .getPixelForValues(prevEntry.getXValue(), prevSmoothedMidPoint).y;
+                prevY += offsetDp; // 同样向下偏移3dp
+
+                // 计算控制点，位于两点之间
+                float controlX = (prevX + x) / 2;
+                float controlY = (prevY + y) / 2;
+
+                // 使用二次贝塞尔曲线
+                backgroundPath.quadTo(controlX, controlY, x, y);
+            }
+
+            Log.d(TAG, "Point " + i + ": x=" + x + ", y=" + y + ", smoothedMidPoint=" + smoothedMidPoint + ", originalMidPoint=" + ((entry.open + entry.close) / 2));
         }
 
-        // 转换为屏幕坐标
-        float topY = (float) chart.getTransformer(chart.getAxisLeft().getAxisDependency())
-                .getPixelForValues(0, maxHigh).y;
-        float bottomY = (float) chart.getTransformer(chart.getAxisLeft().getAxisDependency())
-                .getPixelForValues(0, minLow).y;
+        // 从最后一个高点连接到右上角，再到右下角，然后回到起始点
+        float lastSmoothedMidPoint = smoothedMidPoints.get(regionEntries.size() - 1);
+        float lastY = (float) chart.getTransformer(chart.getAxisLeft().getAxisDependency())
+                .getPixelForValues(lastEntry.getXValue(), lastSmoothedMidPoint).y;
+        float density = chart.getContext().getResources().getDisplayMetrics().density;
+        float offsetDp = 8 * density;
+        lastY += offsetDp;
 
-        // 确保在图表范围内
-        topY = Math.max(topY, contentTop);
-        bottomY = Math.min(bottomY, contentBottom);
+        backgroundPath.lineTo(endX, lastY);
+        backgroundPath.lineTo(endX, contentBottom);
+        backgroundPath.close();
 
-        // 增加一些垂直边距，确保覆盖完整区间
-        float verticalMargin = (bottomY - topY) * 0.2f; // 20%的垂直边距
-        topY = Math.max(topY - verticalMargin, contentTop);
-        bottomY = Math.min(bottomY + verticalMargin, contentBottom);
+        // 计算渐变的顶部和底部Y坐标
+        float topY = contentTop;
+        float bottomY = contentBottom;
 
-        Log.d(TAG, "Drawing background rect: startX=" + startX + ", endX=" + endX +
-                ", topY=" + topY + ", bottomY=" + bottomY);
+        // 创建渐变颜色
+        float topAlpha = 0.30f;  // 上边沿透明度很低
+        float bottomAlpha = 0.10f; // 下边沿透明度也较低，半透明效果
 
-        // 简化绘制逻辑，先用纯色背景测试
-        RectF backgroundRect = new RectF(startX, topY, endX, bottomY);
-        canvas.drawRect(backgroundRect, paint);
+        int topColor = Color.argb((int) (topAlpha * 255), Color.red(baseColor), Color.green(baseColor), Color.blue(baseColor));
+        int bottomColor = Color.argb((int) (bottomAlpha * 255), Color.red(baseColor), Color.green(baseColor), Color.blue(baseColor));
+
+        // 创建线性渐变着色器
+        LinearGradient gradient = new LinearGradient(
+                0, topY,           // 起始点 (x1, y1)
+                0, bottomY,        // 结束点 (x2, y2)
+                topColor,          // 起始颜色
+                bottomColor,       // 结束颜色
+                Shader.TileMode.CLAMP
+        );
+
+        // 设置画笔
+        trendRegionPaint.setStyle(Paint.Style.FILL);
+        trendRegionPaint.setShader(gradient);
+
+        // 绘制路径
+        canvas.drawPath(backgroundPath, trendRegionPaint);
+
+        Log.d(TAG, "Drew trend region background path with gradient for " + regionEntries.size() + " entries");
+    }
+
+    /**
+     * 计算平滑的中点值
+     * 使用简单移动平均来平滑K线开盘价和收盘价的中点
+     */
+    private List<Float> calculateSmoothedMidPoints(List<KLineEntry> regionEntries) {
+        List<Float> smoothedMidPoints = new ArrayList<>();
+        int windowSize = Math.min(3, regionEntries.size()); // 使用3点移动平均，或更小的窗口
+
+        for (int i = 0; i < regionEntries.size(); i++) {
+            float sum = 0;
+            int count = 0;
+
+            // 计算当前点周围的移动平均
+            int start = Math.max(0, i - windowSize / 2);
+            int end = Math.min(regionEntries.size() - 1, i + windowSize / 2);
+
+            for (int j = start; j <= end; j++) {
+                // 计算开盘价和收盘价的中点
+                float midPoint = (regionEntries.get(j).open + regionEntries.get(j).close) / 2;
+                sum += midPoint;
+                count++;
+            }
+
+            float smoothedMidPoint = sum / count;
+            smoothedMidPoints.add(smoothedMidPoint);
+
+            float originalMidPoint = (regionEntries.get(i).open + regionEntries.get(i).close) / 2;
+            Log.d(TAG, "Smoothed midpoint " + i + ": original=" + originalMidPoint + ", smoothed=" + smoothedMidPoint);
+        }
+
+        return smoothedMidPoints;
+    }
+
+    /**
+     * 根据JSON数据设置趋势区间
+     * 兼容用户提供的数据格式
+     */
+    public void setTrendRegionsFromJson(String jsonData) {
+        Log.d(TAG, "Setting trend regions from JSON data");
+        List<TrendRegion> regions = TrendRegionParser.parseFromJson(jsonData);
+        setTrendRegions(regions);
     }
 } 

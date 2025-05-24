@@ -7,8 +7,12 @@ import androidx.lifecycle.MutableLiveData;
 
 import com.alex.mpchart.marker.data.model.KLineEntry;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -29,6 +33,11 @@ public class KLineRepository {
             // 使用固定起始价格，确保有明显的趋势
             float base = 100f;
             KLineEntry previousEntry = null;
+
+            // 生成日期序列 - 从3个月前开始，每天一条数据
+            Calendar calendar = Calendar.getInstance();
+            calendar.add(Calendar.DAY_OF_YEAR, -100); // 从100天前开始
+            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
             
             for (int i = 0; i < 100; i++) {
                 float open, close, high, low;
@@ -65,21 +74,25 @@ public class KLineRepository {
                 }
                 
                 float volume = (float) (Math.random() * 1000 + 500);
-                KLineEntry entry = new KLineEntry(i, open, close, high, low, volume);
+
+                // 创建K线条目，使用Date对象作为时间标识
+                KLineEntry entry = new KLineEntry(open, close, high, low, volume, (Date) calendar.getTime().clone());
 
                 // 如果不是第一个K线，检测激增和陡降
                 if (previousEntry != null) {
+                    // 计算价格变化百分比
                     float changePercent = (close - previousEntry.close) / previousEntry.close;
+                    // 计算成交量变化百分比
                     float volumeChangePercent = (volume - previousEntry.volume) / previousEntry.volume;
 
-                    // 检测数据激增：涨幅超过3%且成交量增加20%以上（降低门槛）
+                    // 检测激增点位 - 价格上涨超过3%且成交量增长超过20%
                     if (changePercent > 0.03f && volumeChangePercent > 0.2f) {
                         entry.hasMarker = true;
                         entry.markerText = "↑";
                         entry.markerType = KLineEntry.MarkerType.UP_TRIANGLE;
                         Log.d("KLineRepository", "Generated UP_TRIANGLE marker at index " + i + ", change=" + String.format("%.2f%%", changePercent * 100) + ", volume=" + String.format("%.2f%%", volumeChangePercent * 100));
                     }
-                    // 检测数据陡降：跌幅超过3%且成交量增加20%以上（降低门槛）
+                    // 检测陡降点位 - 价格下跌超过3%且成交量增长超过20%
                     else if (changePercent < -0.03f && volumeChangePercent > 0.2f) {
                         entry.hasMarker = true;
                         entry.markerText = "↓";
@@ -110,13 +123,13 @@ public class KLineRepository {
                 
                 list.add(entry);
                 previousEntry = entry;
+
+                // 日期向前推进一天
+                calendar.add(Calendar.DAY_OF_YEAR, 1);
             }
 
             // 手动指定数字标记的位置和内容
             addNumberMarkers(list);
-
-            // 检测连续趋势区间
-            detectTrendRegions(list);
 
             // 统计生成的标记数量
             int totalMarkers = 0;
@@ -125,6 +138,14 @@ public class KLineRepository {
                     totalMarkers++;
                 }
             }
+
+            // 输出一些日期信息用于调试
+            if (!list.isEmpty()) {
+                SimpleDateFormat debugFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+                Log.d("KLineRepository", "First entry date: " + debugFormat.format(list.get(0).date));
+                Log.d("KLineRepository", "Last entry date: " + debugFormat.format(list.get(list.size() - 1).date));
+            }
+            
             Log.d("KLineRepository", "Data generation completed. Total markers generated: " + totalMarkers + " out of " + list.size() + " entries");
             
             liveData.postValue(list);
@@ -138,120 +159,22 @@ public class KLineRepository {
      * @param entries K线数据列表
      */
     private void addNumberMarkers(List<KLineEntry> entries) {
-        // 定义要添加数字标记的具体位置和内容
-        int[][] numberMarkers = {
-                {5, 1},    // 在索引5处显示数字1
-                {15, 2},   // 在索引15处显示数字2
-                {35, 3},   // 在索引35处显示数字3
-                {60, 4},   // 在索引60处显示数字4
-                {85, 5}    // 在索引85处显示数字5
-        };
+        // 定义要添加数字标记的具体位置和内容（基于数组索引）
+        int[] markerPositions = {5, 15, 35, 60, 85};
 
-        for (int[] marker : numberMarkers) {
-            int index = marker[0];
-            int number = marker[1];
+        for (int i = 0; i < markerPositions.length; i++) {
+            int position = markerPositions[i];
+            int number = i + 1; // 数字从1开始
 
-            // 检查索引是否有效，且该位置还没有其他标记
-            if (index < entries.size() && !entries.get(index).hasMarker) {
-                KLineEntry entry = entries.get(index);
+            // 检查位置是否有效，且该位置还没有其他标记
+            if (position < entries.size() && !entries.get(position).hasMarker) {
+                KLineEntry entry = entries.get(position);
                 entry.hasMarker = true;
                 entry.markerText = String.valueOf(number);
                 entry.markerType = KLineEntry.MarkerType.NUMBER;
-                Log.d("KLineRepository", "Manually added NUMBER marker at index " + index + " with text: " + number);
+                SimpleDateFormat debugFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+                Log.d("KLineRepository", "Manually added NUMBER marker at position " + position + " with text: " + number + ", date: " + debugFormat.format(entry.date));
             }
-        }
-    }
-
-    /**
-     * 检测连续趋势区间
-     *
-     * @param entries K线数据列表
-     */
-    private void detectTrendRegions(List<KLineEntry> entries) {
-        if (entries.size() < 3) return; // 至少需要3个K线才能形成趋势
-
-        int currentRegionId = 0;
-        int consecutiveRising = 0;
-        int consecutiveFalling = 0;
-        int trendStartIndex = -1;
-
-        for (int i = 1; i < entries.size(); i++) {
-            KLineEntry current = entries.get(i);
-            KLineEntry previous = entries.get(i - 1);
-
-            boolean isRising = current.close > previous.close;
-            boolean isFalling = current.close < previous.close;
-
-            if (isRising) {
-                // 如果之前有下跌趋势，先结束下跌趋势
-                if (consecutiveFalling >= 3) {
-                    finalizeTrendRegion(entries, trendStartIndex, i - 1,
-                            KLineEntry.TrendType.FALLING, currentRegionId++);
-                }
-
-                consecutiveFalling = 0;
-                consecutiveRising++;
-
-                if (consecutiveRising == 1) {
-                    trendStartIndex = i - 1; // 记录趋势开始位置（包括前一个K线）
-                }
-
-            } else if (isFalling) {
-                // 如果之前有上涨趋势，先结束上涨趋势
-                if (consecutiveRising >= 3) {
-                    finalizeTrendRegion(entries, trendStartIndex, i - 1,
-                            KLineEntry.TrendType.RISING, currentRegionId++);
-                }
-
-                consecutiveRising = 0;
-                consecutiveFalling++;
-
-                if (consecutiveFalling == 1) {
-                    trendStartIndex = i - 1; // 记录趋势开始位置（包括前一个K线）
-                }
-
-            } else {
-                // 收盘价相等，中断趋势
-                if (consecutiveRising >= 3) {
-                    finalizeTrendRegion(entries, trendStartIndex, i - 1,
-                            KLineEntry.TrendType.RISING, currentRegionId++);
-                } else if (consecutiveFalling >= 3) {
-                    finalizeTrendRegion(entries, trendStartIndex, i - 1,
-                            KLineEntry.TrendType.FALLING, currentRegionId++);
-                }
-
-                consecutiveRising = 0;
-                consecutiveFalling = 0;
-                trendStartIndex = -1;
-            }
-        }
-
-        // 处理最后一个趋势区间
-        if (consecutiveRising >= 3) {
-            finalizeTrendRegion(entries, trendStartIndex, entries.size() - 1,
-                    KLineEntry.TrendType.RISING, currentRegionId);
-        } else if (consecutiveFalling >= 3) {
-            finalizeTrendRegion(entries, trendStartIndex, entries.size() - 1,
-                    KLineEntry.TrendType.FALLING, currentRegionId);
-        }
-    }
-
-    /**
-     * 完成趋势区间的标记
-     */
-    private void finalizeTrendRegion(List<KLineEntry> entries, int startIndex, int endIndex,
-                                     KLineEntry.TrendType trendType, int regionId) {
-        if (startIndex < 0 || endIndex < startIndex || endIndex >= entries.size()) {
-            return;
-        }
-
-        for (int i = startIndex; i <= endIndex; i++) {
-            KLineEntry entry = entries.get(i);
-            entry.isInTrendRegion = true;
-            entry.trendType = trendType;
-            entry.regionId = regionId;
-            entry.isRegionStart = (i == startIndex);
-            entry.isRegionEnd = (i == endIndex);
         }
     }
 } 
