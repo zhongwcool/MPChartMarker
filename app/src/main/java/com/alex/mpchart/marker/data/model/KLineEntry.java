@@ -69,6 +69,29 @@ public class KLineEntry {
         DOWN_TRIANGLE   // 下三角，表示数据陡降
     }
 
+    /**
+     * 将数字类型转换为MarkerType枚举
+     *
+     * @param type 数字类型：0-数字标记，1-买入，2-卖出，3-上三角，4-下三角
+     * @return 对应的MarkerType枚举值
+     */
+    public static MarkerType typeFromInt(int type) {
+        switch (type) {
+            case 0:
+                return MarkerType.NUMBER;
+            case 1:
+                return MarkerType.BUY;
+            case 2:
+                return MarkerType.SELL;
+            case 3:
+                return MarkerType.UP_TRIANGLE;
+            case 4:
+                return MarkerType.DOWN_TRIANGLE;
+            default:
+                return MarkerType.NONE;
+        }
+    }
+
     public enum TrendType {
         NONE,
         RISING,    // 连续上涨
