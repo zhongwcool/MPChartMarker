@@ -1,19 +1,17 @@
 plugins {
-    alias(libs.plugins.android.application)
+    alias(libs.plugins.android.library)
 }
 
 android {
-    namespace = "com.alex.mpchart.marker"
+    namespace = "com.alex.klinemarker"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.alex.mpchart.marker"
-        minSdk = 31
+        minSdk = 21
         targetSdk = 35
-        versionCode = 1
-        versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        consumerProguardFiles("consumer-rules.pro")
     }
 
     buildTypes {
@@ -25,29 +23,25 @@ android {
             )
         }
     }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
-    buildFeatures {
-        viewBinding = true
-    }
 }
 
 dependencies {
-    // 本地模块依赖
-    implementation(project(":kline-marker-lib"))
+    // MPAndroidChart 依赖
+    api(libs.mpandroidchart)
 
+    // Android 基础依赖
     implementation(libs.appcompat)
-    implementation(libs.material)
-    implementation(libs.constraintlayout)
-    implementation(libs.lifecycle.livedata.ktx)
-    implementation(libs.lifecycle.viewmodel.ktx)
-    implementation(libs.navigation.fragment)
-    implementation(libs.navigation.ui)
-    implementation(libs.swiperefreshlayout)
+    implementation(libs.core)
+
+    // 测试依赖
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
-    implementation(libs.mpandroidchart)
 }
+
+// 发布配置可以后续添加 
