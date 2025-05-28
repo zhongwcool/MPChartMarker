@@ -215,7 +215,7 @@ public class FirstFragment extends Fragment {
         klineDataList = generateSampleKLineData();
 
         // 添加调试信息
-        if (klineDataList == null || klineDataList.isEmpty()) {
+        if (klineDataList.isEmpty()) {
             Toast.makeText(getContext(), "数据生成失败", Toast.LENGTH_LONG).show();
             return;
         }
@@ -283,20 +283,17 @@ public class FirstFragment extends Fragment {
         chart.invalidate();
 
         // 使用post确保在图表渲染完成后设置显示范围
-        chart.post(new Runnable() {
-            @Override
-            public void run() {
-                // 计算缩放比例，使得显示50个K线
-                float totalData = klineDataList.size();
-                float targetVisible = 50f;
-                float scaleX = totalData / targetVisible;
+        chart.post(() -> {
+            // 计算缩放比例，使得显示50个K线
+            float totalData = klineDataList.size();
+            float targetVisible = 50f;
+            float scaleX = totalData / targetVisible;
 
-                // 设置缩放和位置
-                chart.zoom(scaleX, 1f, 0, 0);
-                chart.moveViewToX(totalData - 1f); // 移动到最新数据
+            // 设置缩放和位置
+            chart.zoom(scaleX, 1f, 0, 0);
+            chart.moveViewToX(totalData - 1f); // 移动到最新数据
 
-                Toast.makeText(getContext(), "显示范围已设置为50个K线", Toast.LENGTH_SHORT).show();
-            }
+            Toast.makeText(getContext(), "显示范围已设置为50个K线", Toast.LENGTH_SHORT).show();
         });
 
         Toast.makeText(getContext(), "K线数据加载完成", Toast.LENGTH_SHORT).show();
