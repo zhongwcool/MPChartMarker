@@ -23,3 +23,4 @@ dependencyResolutionManagement {
 rootProject.name = "MPChart Marker"
 include(":app")
 include(":kline-marker-lib")
+include(":sample")
