@@ -72,11 +72,11 @@ public class FirstFragment extends Fragment {
         chart.setPinchZoom(true);
 
         // 设置图表边距为0，不要有空隙
-        chart.setExtraOffsets(5f, 20f, 5f, 50f);
+        chart.setExtraOffsets(2f, 20f, 2f, 50f);
         
         // 设置视口边距：左、顶、右为0，保留底部空间给X轴标签
         // 参数顺序：left, top, right, bottom
-        chart.setViewPortOffsets(5f, 5f, 5f, 50f);
+        chart.setViewPortOffsets(2f, 5f, 2f, 50f);
 
         // 配置X轴
         XAxis xAxis = chart.getXAxis();
@@ -91,6 +91,9 @@ public class FirstFragment extends Fragment {
         xAxis.setLabelCount(6, false);
         // 保留X轴标签显示
         xAxis.setDrawLabels(true);
+        // 设置X轴的额外空间
+        xAxis.setSpaceMin(0.5f); // 在最小值前添加空间
+        xAxis.setSpaceMax(0.5f); // 在最大值后添加空间
         // 设置X轴标签格式为yyyy-MM-dd
         xAxis.setValueFormatter(new ValueFormatter() {
             private final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
@@ -264,7 +267,7 @@ public class FirstFragment extends Fragment {
 
         // 其他配置
         candleDataSet.setDrawValues(false);
-        candleDataSet.setBarSpace(0.2f); // 设置K线间距
+        candleDataSet.setBarSpace(0.1f); // 减小K线间距从0.2f到0.1f
         candleDataSet.setShowCandleBar(true);
         candleDataSet.setHighlightEnabled(true);
         candleDataSet.setHighLightColor(Color.parseColor("#FFBB33"));
@@ -291,7 +294,10 @@ public class FirstFragment extends Fragment {
 
             // 设置缩放和位置
             chart.zoom(scaleX, 1f, 0, 0);
-            chart.moveViewToX(totalData - 1f); // 移动到最新数据
+            // 移动视图，确保最右边有足够空间
+            // 使用总数据量减去可见数量，再加上一些偏移
+            float xPosition = Math.max(0, totalData - targetVisible + 1);
+            chart.moveViewToX(xPosition);
 
             Toast.makeText(getContext(), "显示范围已设置为50个K线", Toast.LENGTH_SHORT).show();
         });
