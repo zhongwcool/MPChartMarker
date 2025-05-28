@@ -96,7 +96,7 @@ public class SecondFragment extends Fragment {
                         "<h3 style='color:#E91E63;'>🎨 高级配置示例</h3>" +
                         "<pre style='background:#F5F5F5; padding:10px; border-radius:5px;'>" +
                         "MarkerConfig config = new MarkerConfig.Builder()<br/>" +
-                        "    .markerSize(18f)<br/>" +
+                        "    .markerSize(12f)<br/>" +
                         "    .buyColor(Color.parseColor(\"#4CAF50\"))<br/>" +
                         "    .sellColor(Color.parseColor(\"#F44336\"))<br/>" +
                         "    .build();<br/><br/>" +

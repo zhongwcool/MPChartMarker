@@ -94,9 +94,9 @@ public class FirstFragment extends Fragment {
         // 设置X轴的额外空间
         xAxis.setSpaceMin(0.5f); // 在最小值前添加空间
         xAxis.setSpaceMax(0.5f); // 在最大值后添加空间
-        // 设置X轴标签格式为yyyy-MM-dd
+        // 设置X轴标签格式为MM-dd
         xAxis.setValueFormatter(new ValueFormatter() {
-            private final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+            private final SimpleDateFormat dateFormat = new SimpleDateFormat("MM-dd", Locale.getDefault());
 
             @Override
             public String getFormattedValue(float value) {
@@ -152,9 +152,9 @@ public class FirstFragment extends Fragment {
 
         // 创建标记配置
         MarkerConfig markerConfig = new MarkerConfig.Builder()
-                .markerSize(16f) // 增大标记大小
-                .textSize(12f) // 增大文字大小
-                .padding(4f) // 增加内边距
+                .markerSize(12f) // 进一步减小标记大小
+                .textSize(10f) // 相应减小文字大小
+                .padding(3f) // 减小内边距
                 .buyColor(Color.parseColor("#00AA00"))
                 .sellColor(Color.parseColor("#FF4444"))
                 .numberColor(Color.parseColor("#2196F3")) // 使用更明显的蓝色
