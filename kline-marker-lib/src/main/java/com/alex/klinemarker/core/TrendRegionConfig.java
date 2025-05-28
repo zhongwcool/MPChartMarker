@@ -33,13 +33,17 @@ public class TrendRegionConfig {
     private boolean enableGradient = true;  // 是否启用渐变
     private boolean enableBezierCurve = true; // 是否启用贝塞尔曲线
 
+    // 性能优化配置
+    private boolean enablePerformanceMode = false; // 性能模式，禁用复杂渲染
+    private int maxVisibleRegions = 10; // 最大可见区间数量
+
     public TrendRegionConfig() {
         // 使用默认配置
     }
 
     // Builder模式
     public static class Builder {
-        private TrendRegionConfig config = new TrendRegionConfig();
+        private final TrendRegionConfig config = new TrendRegionConfig();
 
         public Builder topAlpha(float alpha) {
             config.topAlpha = alpha;
@@ -91,6 +95,23 @@ public class TrendRegionConfig {
             return this;
         }
 
+        public Builder enablePerformanceMode(boolean enable) {
+            config.enablePerformanceMode = enable;
+            if (enable) {
+                // 性能模式：禁用复杂渲染
+                config.enableGradient = false;
+                config.enableBezierCurve = false;
+                config.enableSmoothing = false;
+                config.smoothWindowSize = 1;
+            }
+            return this;
+        }
+
+        public Builder maxVisibleRegions(int max) {
+            config.maxVisibleRegions = max;
+            return this;
+        }
+
         public TrendRegionConfig build() {
             return config;
         }
@@ -135,5 +156,13 @@ public class TrendRegionConfig {
 
     public boolean isEnableBezierCurve() {
         return enableBezierCurve;
+    }
+
+    public boolean isEnablePerformanceMode() {
+        return enablePerformanceMode;
+    }
+
+    public int getMaxVisibleRegions() {
+        return maxVisibleRegions;
     }
 } 

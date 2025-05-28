@@ -29,6 +29,7 @@ import java.util.Map;
 public class KLineMarkerRenderer<T> implements IMarker {
 
     private static final String TAG = "KLineMarkerRenderer";
+    private static final boolean DEBUG = false; // 控制日志输出，发布时设为false
 
     private final Context context;
     private final CombinedChart chart;
@@ -45,10 +46,13 @@ public class KLineMarkerRenderer<T> implements IMarker {
     // 数据
     private List<T> klineData;
     private List<MarkerData> markers;
-    private Map<String, MarkerData> dateToMarkerMap;
+    private final Map<String, MarkerData> dateToMarkerMap;
 
     // 屏幕密度
     private final float density;
+
+    // 性能优化：复用对象
+    private final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
 
     public KLineMarkerRenderer(Context context, CombinedChart chart,
                                KLineDataAdapter<T> dataAdapter, MarkerConfig config) {
@@ -100,6 +104,8 @@ public class KLineMarkerRenderer<T> implements IMarker {
 
     /**
      * 设置K线数据
+     *
+     * @param klineData K线数据列表
      */
     public void setKLineData(List<T> klineData) {
         this.klineData = klineData;
@@ -107,6 +113,8 @@ public class KLineMarkerRenderer<T> implements IMarker {
 
     /**
      * 设置标记数据
+     *
+     * @param markers 标记数据列表
      */
     public void setMarkers(List<MarkerData> markers) {
         this.markers = markers;
@@ -114,12 +122,11 @@ public class KLineMarkerRenderer<T> implements IMarker {
     }
 
     /**
-     * 更新日期到标记的映射
+     * 更新日期到标记的映射关系，提高查找性能
      */
     private void updateDateToMarkerMap() {
         dateToMarkerMap.clear();
         if (markers != null) {
-            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
             for (MarkerData marker : markers) {
                 if (marker.getDate() != null) {
                     String dateStr = dateFormat.format(marker.getDate());
@@ -137,7 +144,7 @@ public class KLineMarkerRenderer<T> implements IMarker {
             return;
         }
 
-        Log.d(TAG, "drawMarkers called, markers size: " + markers.size());
+        if (DEBUG) Log.d(TAG, "drawMarkers called, markers size: " + markers.size());
 
         // 获取图表可见区域的时间范围
         float minTime = chart.getLowestVisibleX();
@@ -155,8 +162,6 @@ public class KLineMarkerRenderer<T> implements IMarker {
         float safeBottomY = contentBottom - markerSizePx * 1.5f;
         float safeLeftX = leftBoundary + markerSizePx;
         float safeRightX = rightBoundary - markerSizePx;
-
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
 
         // 遍历K线数据，查找对应的标记
         for (int i = 0; i < klineData.size(); i++) {

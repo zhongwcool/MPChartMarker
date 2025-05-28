@@ -15,8 +15,10 @@ import com.github.mikephil.charting.charts.CombinedChart;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 /**
  * 趋势区间渲染器
@@ -25,6 +27,7 @@ import java.util.Locale;
 public class TrendRegionRenderer<T> {
 
     private static final String TAG = "TrendRegionRenderer";
+    private static final boolean DEBUG = true; // 临时启用调试，验证修复效果
 
     private final Context context;
     private final CombinedChart chart;
@@ -40,6 +43,12 @@ public class TrendRegionRenderer<T> {
 
     // 屏幕密度
     private final float density;
+
+    // 缓存相关
+    private final Map<String, List<T>> regionEntriesCache = new HashMap<>();
+
+    // 性能优化：复用对象
+    private final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
 
     public TrendRegionRenderer(Context context, CombinedChart chart,
                                KLineDataAdapter<T> dataAdapter, TrendRegionConfig config) {
@@ -67,6 +76,8 @@ public class TrendRegionRenderer<T> {
      */
     public void setKLineData(List<T> klineData) {
         this.klineData = klineData;
+        // 清除缓存，因为数据已改变
+        clearCache();
     }
 
     /**
@@ -74,7 +85,16 @@ public class TrendRegionRenderer<T> {
      */
     public void setTrendRegions(List<TrendRegion> trendRegions) {
         this.trendRegions = trendRegions != null ? trendRegions : new ArrayList<>();
-        Log.d(TAG, "Set " + this.trendRegions.size() + " trend regions");
+        if (DEBUG) Log.d(TAG, "Set " + this.trendRegions.size() + " trend regions");
+        // 清除缓存，因为趋势区间已改变
+        clearCache();
+    }
+
+    /**
+     * 清除所有缓存
+     */
+    private void clearCache() {
+        regionEntriesCache.clear();
     }
 
     /**
@@ -85,8 +105,6 @@ public class TrendRegionRenderer<T> {
             return;
         }
 
-        Log.d(TAG, "drawTrendRegions called with " + trendRegions.size() + " regions");
-
         // 获取图表可见区域的时间范围
         float minTime = chart.getLowestVisibleX();
         float maxTime = chart.getHighestVisibleX();
@@ -95,32 +113,101 @@ public class TrendRegionRenderer<T> {
         float contentTop = chart.getViewPortHandler().contentTop();
         float contentBottom = chart.getViewPortHandler().contentBottom();
 
+        // 性能优化：限制绘制的区间数量
+        int maxRegions = config.isEnablePerformanceMode() ?
+                Math.min(config.getMaxVisibleRegions(), trendRegions.size()) :
+                trendRegions.size();
+
         // 为每个趋势区间绘制背景
-        for (int regionIndex = 0; regionIndex < trendRegions.size(); regionIndex++) {
+        for (int regionIndex = 0; regionIndex < maxRegions; regionIndex++) {
             TrendRegion region = trendRegions.get(regionIndex);
-            Log.d(TAG, "Processing region: " + region.toString());
 
-            // 查找该区间内的K线数据
-            List<T> regionEntries = findEntriesInRegion(region, minTime, maxTime);
-
-            if (regionEntries.isEmpty()) {
-                Log.d(TAG, "No entries found in visible range for region: " + region.getStart() + " to " + region.getEnd());
+            // 检查该区间是否在可见范围内
+            if (!isRegionVisible(region, minTime, maxTime)) {
                 continue;
             }
 
-            Log.d(TAG, "Found " + regionEntries.size() + " entries for region " + regionIndex);
+            // 查找该区间内的所有K线数据（不限制可见范围）
+            String regionKey = getRegionKey(region, regionIndex);
+            List<T> allRegionEntries = regionEntriesCache.get(regionKey);
+            if (allRegionEntries == null) {
+                allRegionEntries = findAllEntriesInRegion(region);
+                regionEntriesCache.put(regionKey, allRegionEntries);
+            }
+
+            if (allRegionEntries.isEmpty()) {
+                continue;
+            }
 
             // 绘制区间背景
-            drawRegionBackground(canvas, regionEntries, region, contentTop, contentBottom);
+            drawRegionBackground(canvas, allRegionEntries, region, contentTop, contentBottom, minTime, maxTime);
         }
     }
 
     /**
-     * 查找指定趋势区间内的K线数据
+     * 检查区间是否在可见范围内
      */
+    private boolean isRegionVisible(TrendRegion region, float minTime, float maxTime) {
+        // 获取区间的起始和结束时间对应的X值
+        float regionStartX = getDateXValue(region.getStart());
+        float regionEndX = region.getEnd() != null ? getDateXValue(region.getEnd()) : Float.MAX_VALUE;
+
+        // 检查区间是否与可见范围有交集
+        boolean isVisible = !(regionEndX < minTime || regionStartX > maxTime);
+
+        if (DEBUG) {
+            Log.d(TAG, String.format("Region %s to %s: startX=%.1f, endX=%.1f, minTime=%.1f, maxTime=%.1f, visible=%b",
+                    region.getStart(), region.getEnd(), regionStartX, regionEndX, minTime, maxTime, isVisible));
+        }
+
+        return isVisible;
+    }
+
+    /**
+     * 获取日期对应的X值
+     */
+    private float getDateXValue(String dateStr) {
+        if (klineData == null || klineData.isEmpty()) {
+            return 0f;
+        }
+
+        // 遍历K线数据找到对应日期的X值
+        for (T entry : klineData) {
+            if (dataAdapter.getDate(entry) != null) {
+                String entryDateStr = dateFormat.format(dataAdapter.getDate(entry));
+                if (dateStr.equals(entryDateStr)) {
+                    return dataAdapter.getXValue(entry);
+                }
+            }
+        }
+        return 0f;
+    }
+
+    /**
+     * 查找指定趋势区间内的所有K线数据（不限制可见范围）
+     */
+    private List<T> findAllEntriesInRegion(TrendRegion region) {
+        List<T> regionEntries = new ArrayList<>();
+
+        for (T entry : klineData) {
+            // 检查该K线条目是否在趋势区间的时间范围内
+            if (dataAdapter.getDate(entry) != null) {
+                String entryDateStr = dateFormat.format(dataAdapter.getDate(entry));
+                if (region.containsDate(entryDateStr)) {
+                    regionEntries.add(entry);
+                }
+            }
+        }
+
+        return regionEntries;
+    }
+
+    /**
+     * 查找指定趋势区间内的K线数据（已弃用，保留用于兼容）
+     */
+    @Deprecated
     private List<T> findEntriesInRegion(TrendRegion region, float minTime, float maxTime) {
         List<T> regionEntries = new ArrayList<>();
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
 
         for (T entry : klineData) {
             float xValue = dataAdapter.getXValue(entry);
@@ -132,7 +219,6 @@ public class TrendRegionRenderer<T> {
                     String entryDateStr = dateFormat.format(dataAdapter.getDate(entry));
                     if (region.containsDate(entryDateStr)) {
                         regionEntries.add(entry);
-                        Log.d(TAG, "Entry (date: " + entryDateStr + ") is in region " + region.getStart() + " to " + region.getEnd());
                     }
                 }
             }
@@ -144,16 +230,60 @@ public class TrendRegionRenderer<T> {
     /**
      * 绘制区间背景
      */
-    private void drawRegionBackground(Canvas canvas, List<T> regionEntries,
-                                      TrendRegion region, float contentTop, float contentBottom) {
-        if (regionEntries.isEmpty()) return;
+    private void drawRegionBackground(Canvas canvas, List<T> allRegionEntries,
+                                      TrendRegion region, float contentTop, float contentBottom,
+                                      float minTime, float maxTime) {
+        if (allRegionEntries.isEmpty()) return;
 
-        Log.d(TAG, "Drawing region background for " + regionEntries.size() + " entries");
+        // 筛选出可见范围内的条目
+        List<T> visibleEntries = new ArrayList<>();
+        for (T entry : allRegionEntries) {
+            float xValue = dataAdapter.getXValue(entry);
+            if (xValue >= minTime && xValue <= maxTime) {
+                visibleEntries.add(entry);
+            }
+        }
+
+        if (visibleEntries.isEmpty()) {
+            if (DEBUG) {
+                Log.d(TAG, String.format("Region %s to %s: no visible entries (total=%d)",
+                        region.getStart(), region.getEnd(), allRegionEntries.size()));
+            }
+            return;
+        }
+
+        if (DEBUG) {
+            Log.d(TAG, String.format("Drawing region %s to %s: %d visible entries out of %d total",
+                    region.getStart(), region.getEnd(), visibleEntries.size(), allRegionEntries.size()));
+        }
 
         // 获取基础颜色
         int baseColor = getRegionColor(region);
 
-        // 创建路径来绘制沿K线走势的背景
+        // 创建路径（每次都重新创建，因为屏幕坐标会变化）
+        Path backgroundPath = createRegionPath(visibleEntries, contentBottom);
+
+        // 设置画笔和渐变
+        if (config.isEnableGradient()) {
+            setupGradientPaint(baseColor, contentTop, contentBottom);
+        } else {
+            trendRegionPaint.setColor(Color.argb(
+                    (int) (config.getTopAlpha() * 255),
+                    Color.red(baseColor),
+                    Color.green(baseColor),
+                    Color.blue(baseColor)
+            ));
+            trendRegionPaint.setShader(null);
+        }
+
+        // 绘制路径
+        canvas.drawPath(backgroundPath, trendRegionPaint);
+    }
+
+    /**
+     * 创建区间路径
+     */
+    private Path createRegionPath(List<T> regionEntries, float contentBottom) {
         Path backgroundPath = new Path();
 
         // 添加一些边距
@@ -228,23 +358,7 @@ public class TrendRegionRenderer<T> {
         backgroundPath.lineTo(endX, contentBottom);
         backgroundPath.close();
 
-        // 设置画笔和渐变
-        if (config.isEnableGradient()) {
-            setupGradientPaint(baseColor, contentTop, contentBottom);
-        } else {
-            trendRegionPaint.setColor(Color.argb(
-                    (int) (config.getTopAlpha() * 255),
-                    Color.red(baseColor),
-                    Color.green(baseColor),
-                    Color.blue(baseColor)
-            ));
-            trendRegionPaint.setShader(null);
-        }
-
-        // 绘制路径
-        canvas.drawPath(backgroundPath, trendRegionPaint);
-
-        Log.d(TAG, "Drew trend region background path for " + regionEntries.size() + " entries");
+        return backgroundPath;
     }
 
     /**
@@ -323,5 +437,12 @@ public class TrendRegionRenderer<T> {
         }
 
         return midPoints;
+    }
+
+    /**
+     * 生成区间缓存键
+     */
+    private String getRegionKey(TrendRegion region, int index) {
+        return region.getStart() + "_" + region.getEnd() + "_" + index;
     }
 } 

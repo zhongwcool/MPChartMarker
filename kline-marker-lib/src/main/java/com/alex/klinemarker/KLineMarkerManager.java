@@ -209,7 +209,12 @@ public class KLineMarkerManager<T> {
         public void drawData(Canvas c) {
             // 先绘制趋势区间背景（最底层）
             if (trendRegionRenderer != null) {
-                trendRegionRenderer.drawTrendRegions(c);
+                try {
+                    trendRegionRenderer.drawTrendRegions(c);
+                } catch (Exception e) {
+                    // 防止趋势区间绘制错误影响主图表
+                    android.util.Log.w("ChartRenderer", "Error drawing trend regions", e);
+                }
             }
 
             // 再绘制原有的图表数据（K线等）
@@ -217,7 +222,12 @@ public class KLineMarkerManager<T> {
 
             // 最后绘制标记（在图表数据之上）
             if (markerRenderer != null) {
-                markerRenderer.drawMarkers(c);
+                try {
+                    markerRenderer.drawMarkers(c);
+                } catch (Exception e) {
+                    // 防止标记绘制错误影响主图表
+                    android.util.Log.w("ChartRenderer", "Error drawing markers", e);
+                }
             }
         }
     }

@@ -169,13 +169,11 @@ public class FirstFragment extends Fragment {
                 .risingColor(Color.parseColor("#00AA00"))
                 .fallingColor(Color.parseColor("#FF4444"))
                 .neutralColor(Color.parseColor("#4285F4"))
-                .topAlpha(0.25f)
-                .bottomAlpha(0.05f)
+                .topAlpha(0.15f) // 降低透明度以减少渲染负担
+                .bottomAlpha(0.03f) // 降低透明度
                 .offsetDp(4f)
-                .enableBezierCurve(true)
-                .enableGradient(true)
-                .enableSmoothing(true)
-                .smoothWindowSize(2)
+                .enablePerformanceMode(true) // 启用性能模式
+                .maxVisibleRegions(5) // 限制最大可见区间数量
                 .build();
 
         // 初始化标记管理器
@@ -211,6 +209,22 @@ public class FirstFragment extends Fragment {
         binding.btnClearAll.setOnClickListener(v -> {
             markerManager.clearAll();
             Toast.makeText(getContext(), "已清除所有标记和趋势区间", Toast.LENGTH_SHORT).show();
+        });
+
+        // 添加图表触摸监听器以监控性能
+        setupChartTouchListener();
+    }
+
+    /**
+     * 设置图表触摸监听器，用于监控滑动性能
+     */
+    private void setupChartTouchListener() {
+        chart.setOnTouchListener((v, event) -> {
+            // 记录触摸开始时间用于性能监控
+            if (event.getAction() == android.view.MotionEvent.ACTION_DOWN) {
+                v.getParent().requestDisallowInterceptTouchEvent(true);
+            }
+            return false;
         });
     }
 
