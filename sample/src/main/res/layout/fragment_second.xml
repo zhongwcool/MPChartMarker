@@ -1,31 +1,63 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".SecondFragment">
 
-    <LinearLayout
+    <!-- 主要内容区域 -->
+    <FrameLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="16dp">
+        android:layout_height="match_parent">
 
-        <Button
-            android:id="@+id/button_second"
+        <androidx.core.widget.NestedScrollView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp"
+                android:paddingTop="80dp">
+
+                <TextView
+                    android:id="@+id/textview_second"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="#FAFAFA"
+                    android:lineSpacingExtra="4dp"
+                    android:padding="16dp"
+                    android:text="正在加载README文档..."
+                    android:textSize="14sp" />
+
+            </LinearLayout>
+        </androidx.core.widget.NestedScrollView>
+
+        <!-- 悬浮进度条 -->
+        <ProgressBar
+            android:id="@+id/progress_bar"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
-            android:text="@string/previous"
-            android:layout_marginBottom="16dp" />
+            android:elevation="16dp"
+            android:visibility="visible" />
+    </FrameLayout>
 
-        <TextView
-            android:id="@+id/textview_second"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="#FAFAFA"
-            android:text="@string/lorem_ipsum" />
+    <!-- 悬浮按钮 -->
+    <Button
+        android:id="@+id/button_second"
+        style="@style/Widget.Material3.Button.UnelevatedButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|center_horizontal"
+        android:layout_marginBottom="16dp"
+        android:elevation="12dp"
+        android:minWidth="120dp"
+        android:paddingHorizontal="24dp"
+        android:paddingVertical="12dp"
+        android:text="@string/previous"
+        android:translationZ="4dp" />
 
-    </LinearLayout>
-</androidx.core.widget.NestedScrollView>
+</FrameLayout>
 

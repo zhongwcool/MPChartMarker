@@ -46,6 +46,20 @@ dependencies {
     implementation(project(":kline-marker-lib"))
     implementation(libs.mpandroidchart)
 
+    // 网络请求库
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
+
+    // Markdown渲染库 - 排除冲突的annotations依赖
+    implementation("io.noties.markwon:core:4.6.2") {
+        exclude(group = "org.jetbrains", module = "annotations-java5")
+    }
+    implementation("io.noties.markwon:html:4.6.2") {
+        exclude(group = "org.jetbrains", module = "annotations-java5")
+    }
+    implementation("io.noties.markwon:image:4.6.2") {
+        exclude(group = "org.jetbrains", module = "annotations-java5")
+    }
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)

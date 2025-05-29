@@ -65,38 +65,25 @@ KLineMarkerManager<YourKLineData> markerManager =
                 .build();
 
 // 设置K线数据
-markerManager.
-
-setKLineData(klineDataList);
+markerManager.setKLineData(klineDataList);
 
 // 创建标记
 List<MarkerData> markers = new ArrayList<>();
-markers.
-
-add(new MarkerData(new Date(),MarkerData.MarkerType.BUY,"买入"));
-        markers.
-
-add(new MarkerData(new Date(),MarkerData.MarkerType.SELL,"卖出"));
+markers.add(new MarkerData(new Date(), MarkerData.MarkerType.BUY, "买入"));
+markers.add(new MarkerData(new Date(), MarkerData.MarkerType.SELL, "卖出"));
 
 // 显示标记
-        markerManager.
-
-setMarkers(markers);
+markerManager.setMarkers(markers);
 
 // 创建趋势区间
 List<TrendRegion> trendRegions = new ArrayList<>();
-trendRegions.
-
-add(new TrendRegion("2024-01-15", "2024-01-25",3,
-        "2024-01-26T10:00:00Z",TrendRegion.TrendType.RISING));
+trendRegions.add(
+        new TrendRegion("2024-01-15", "2024-01-25", 3,
+        "2024-01-26T10:00:00Z", TrendRegion.TrendType.RISING));
 
 // 显示趋势区间
-        markerManager.
-
-setTrendRegions(trendRegions);
-markerManager.
-
-refresh();
+markerManager.setTrendRegions(trendRegions);
+markerManager.refresh();
 ```
 
 ## 核心组件

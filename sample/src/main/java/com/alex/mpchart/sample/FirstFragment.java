@@ -2,6 +2,7 @@ package com.alex.mpchart.sample;
 
 import android.graphics.Color;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -73,7 +74,7 @@ public class FirstFragment extends Fragment {
 
         // 设置图表边距为0，不要有空隙
         chart.setExtraOffsets(2f, 20f, 2f, 50f);
-        
+
         // 设置视口边距：左、顶、右为0，保留底部空间给X轴标签
         // 参数顺序：left, top, right, bottom
         chart.setViewPortOffsets(2f, 5f, 2f, 50f);
@@ -313,7 +314,7 @@ public class FirstFragment extends Fragment {
             float xPosition = Math.max(0, totalData - targetVisible + 1);
             chart.moveViewToX(xPosition);
 
-            Toast.makeText(getContext(), "显示范围已设置为50个K线", Toast.LENGTH_SHORT).show();
+            Log.d("loadSampleData", "显示范围已设置为50个K线");
         });
 
         Toast.makeText(getContext(), "K线数据加载完成", Toast.LENGTH_SHORT).show();

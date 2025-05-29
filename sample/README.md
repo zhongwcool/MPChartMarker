@@ -108,20 +108,9 @@ KLineMarkerManager<KLineData> markerManager =
 
 ```java
 List<MarkerData> markers = new ArrayList<>();
-markers.
-
-add(new MarkerData(
-        dateFormat.parse("2024-01-05"),
-
-MarkerData.MarkerType.BUY,
-        "买入"
-        ));
-        markerManager.
-
-setMarkers(markers);
-markerManager.
-
-refresh();
+markers.add(new MarkerData(dateFormat.parse("2024-01-05"), MarkerData.MarkerType.BUY, "买入"));
+markerManager.setMarkers(markers);
+markerManager.refresh();
 ```
 
 ## 📊 演示数据
