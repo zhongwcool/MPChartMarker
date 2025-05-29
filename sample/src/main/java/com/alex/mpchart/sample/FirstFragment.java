@@ -238,7 +238,7 @@ public class FirstFragment extends Fragment {
             return;
         }
 
-        Toast.makeText(getContext(), "生成了 " + klineDataList.size() + " 条K线数据", Toast.LENGTH_SHORT).show();
+        Log.d("loadSampleData", "生成了 " + klineDataList.size() + " 条K线数据");
 
         // 设置K线数据到标记管理器
         markerManager.setKLineData(klineDataList);
@@ -259,7 +259,7 @@ public class FirstFragment extends Fragment {
         }
 
         // 添加调试信息
-        Toast.makeText(getContext(), "创建了 " + candleEntries.size() + " 个CandleEntry", Toast.LENGTH_SHORT).show();
+        Log.d("loadSampleData", "创建了 " + candleEntries.size() + " 个CandleEntry");
 
         // 创建K线数据集（全部实心）
         CandleDataSet candleDataSet = new CandleDataSet(candleEntries, "K线");

@@ -10,28 +10,40 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
+        <!-- 支持双向滚动的容器 -->
         <androidx.core.widget.NestedScrollView
             android:layout_width="match_parent"
-            android:layout_height="match_parent">
+            android:layout_height="match_parent"
+            android:fillViewport="true">
 
-            <LinearLayout
+            <HorizontalScrollView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="16dp"
-                android:paddingTop="80dp">
+                android:fillViewport="true"
+                android:scrollbars="horizontal">
 
-                <TextView
-                    android:id="@+id/textview_second"
-                    android:layout_width="match_parent"
+                <LinearLayout
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:background="#FAFAFA"
-                    android:lineSpacingExtra="4dp"
-                    android:padding="16dp"
-                    android:text="正在加载README文档..."
-                    android:textSize="14sp" />
+                    android:orientation="vertical"
+                    android:padding="0dp"
+                    android:paddingTop="80dp"
+                    android:minWidth="800dp">
 
-            </LinearLayout>
+                    <TextView
+                        android:id="@+id/textview_second"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:background="#FAFAFA"
+                        android:lineSpacingExtra="4dp"
+                        android:padding="16dp"
+                        android:text="正在加载README文档..."
+                        android:textSize="14sp"
+                        android:minWidth="768dp"
+                        android:layout_marginEnd="16dp" />
+
+                </LinearLayout>
+            </HorizontalScrollView>
         </androidx.core.widget.NestedScrollView>
 
         <!-- 悬浮进度条 -->

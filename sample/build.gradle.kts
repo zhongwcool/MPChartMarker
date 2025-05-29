@@ -47,7 +47,7 @@ dependencies {
     implementation(libs.mpandroidchart)
 
     // 网络请求库
-    implementation("com.squareup.okhttp3:okhttp:4.12.0")
+    implementation(libs.okhttp)
 
     // Markdown渲染库 - 排除冲突的annotations依赖
     implementation("io.noties.markwon:core:4.6.2") {

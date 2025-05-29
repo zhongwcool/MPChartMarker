@@ -130,7 +130,6 @@ public class SecondFragment extends Fragment {
 
             // 设置TextView的样式
             binding.textviewSecond.setTextSize(14);
-            binding.textviewSecond.setPadding(16, 16, 16, 16);
 
             Toast.makeText(getContext(), "README文档加载完成", Toast.LENGTH_SHORT).show();
         } catch (Exception e) {
