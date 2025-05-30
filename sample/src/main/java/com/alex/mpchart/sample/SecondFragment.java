@@ -31,6 +31,7 @@ public class SecondFragment extends Fragment {
     private OkHttpClient httpClient;
     private ExecutorService executorService;
     private Markwon markwon;
+    private Call currentCall;
 
     private static final String README_URL = "https://raw.githubusercontent.com/zhongwcool/MPChartMarker/refs/heads/main/README.md";
 
@@ -76,22 +77,29 @@ public class SecondFragment extends Fragment {
 
     private void loadReadmeFromGitHub() {
         // 显示进度条
-        binding.progressBar.setVisibility(View.VISIBLE);
-        binding.textviewSecond.setText("正在从GitHub加载README文档...");
+        if (binding != null) {
+            binding.progressBar.setVisibility(View.VISIBLE);
+            binding.textviewSecond.setText("正在从GitHub加载README文档...");
+        }
 
         Request request = new Request.Builder()
                 .url(README_URL)
                 .build();
 
-        httpClient.newCall(request).enqueue(new Callback() {
+        currentCall = httpClient.newCall(request);
+        currentCall.enqueue(new Callback() {
             @Override
             public void onFailure(@NonNull Call call, @NonNull IOException e) {
                 // 在主线程中更新UI
-                if (getActivity() != null) {
+                if (getActivity() != null && binding != null) {
                     getActivity().runOnUiThread(() -> {
-                        binding.progressBar.setVisibility(View.GONE);
-                        binding.textviewSecond.setText("加载失败：" + e.getMessage() + "\n\n请检查网络连接后重试。");
-                        Toast.makeText(getContext(), "网络请求失败", Toast.LENGTH_SHORT).show();
+                        if (binding != null) {
+                            binding.progressBar.setVisibility(View.GONE);
+                            binding.textviewSecond.setText("加载失败：" + e.getMessage() + "\n\n请检查网络连接后重试。");
+                        }
+                        if (getContext() != null) {
+                            Toast.makeText(getContext(), "网络请求失败", Toast.LENGTH_SHORT).show();
+                        }
                     });
                 }
             }
@@ -102,19 +110,25 @@ public class SecondFragment extends Fragment {
                     String markdownContent = response.body().string();
 
                     // 在主线程中更新UI
-                    if (getActivity() != null) {
+                    if (getActivity() != null && binding != null) {
                         getActivity().runOnUiThread(() -> {
-                            binding.progressBar.setVisibility(View.GONE);
-                            renderMarkdown(markdownContent);
+                            if (binding != null) {
+                                binding.progressBar.setVisibility(View.GONE);
+                                renderMarkdown(markdownContent);
+                            }
                         });
                     }
                 } else {
                     // 在主线程中更新UI
-                    if (getActivity() != null) {
+                    if (getActivity() != null && binding != null) {
                         getActivity().runOnUiThread(() -> {
-                            binding.progressBar.setVisibility(View.GONE);
-                            binding.textviewSecond.setText("加载失败：HTTP " + response.code() + "\n\n请稍后重试。");
-                            Toast.makeText(getContext(), "服务器响应错误", Toast.LENGTH_SHORT).show();
+                            if (binding != null) {
+                                binding.progressBar.setVisibility(View.GONE);
+                                binding.textviewSecond.setText("加载失败：HTTP " + response.code() + "\n\n请稍后重试。");
+                            }
+                            if (getContext() != null) {
+                                Toast.makeText(getContext(), "服务器响应错误", Toast.LENGTH_SHORT).show();
+                            }
                         });
                     }
                 }
@@ -124,6 +138,10 @@ public class SecondFragment extends Fragment {
     }
 
     private void renderMarkdown(String markdownContent) {
+        if (binding == null) {
+            return; // Fragment已被销毁，直接返回
+        }
+        
         try {
             // 使用Markwon渲染Markdown内容
             markwon.setMarkdown(binding.textviewSecond, markdownContent);
@@ -131,10 +149,16 @@ public class SecondFragment extends Fragment {
             // 设置TextView的样式
             binding.textviewSecond.setTextSize(14);
 
-            Toast.makeText(getContext(), "README文档加载完成", Toast.LENGTH_SHORT).show();
+            if (getContext() != null) {
+                Toast.makeText(getContext(), "README文档加载完成", Toast.LENGTH_SHORT).show();
+            }
         } catch (Exception e) {
-            binding.textviewSecond.setText("渲染Markdown失败：" + e.getMessage());
-            Toast.makeText(getContext(), "文档渲染失败", Toast.LENGTH_SHORT).show();
+            if (binding != null) {
+                binding.textviewSecond.setText("渲染Markdown失败：" + e.getMessage());
+            }
+            if (getContext() != null) {
+                Toast.makeText(getContext(), "文档渲染失败", Toast.LENGTH_SHORT).show();
+            }
         }
     }
 
@@ -152,5 +176,10 @@ public class SecondFragment extends Fragment {
         }
         
         binding = null;
+
+        // 取消当前请求
+        if (currentCall != null) {
+            currentCall.cancel();
+        }
     }
 }

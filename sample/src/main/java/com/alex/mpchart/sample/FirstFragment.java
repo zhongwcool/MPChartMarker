@@ -15,7 +15,10 @@ import androidx.navigation.fragment.NavHostFragment;
 import com.alex.klinemarker.KLineMarkerManager;
 import com.alex.klinemarker.core.MarkerConfig;
 import com.alex.klinemarker.core.TrendRegionConfig;
+import com.alex.klinemarker.data.LineLength;
 import com.alex.klinemarker.data.MarkerData;
+import com.alex.klinemarker.data.MarkerStyle;
+import com.alex.klinemarker.data.MarkerType;
 import com.alex.klinemarker.data.TrendRegion;
 import com.alex.mpchart.sample.databinding.FragmentFirstBinding;
 import com.github.mikephil.charting.charts.CombinedChart;
@@ -378,62 +381,230 @@ public class FirstFragment extends Fragment {
         List<MarkerData> markers = new ArrayList<>();
 
         if (klineDataList != null && !klineDataList.isEmpty()) {
-            // 基于实际数据范围添加标记
             int dataSize = klineDataList.size();
 
-            // 添加买入标记（第10天）
-            if (dataSize > 10) {
-                markers.add(new MarkerData(
-                        klineDataList.get(10).getDate(),
-                        MarkerData.MarkerType.BUY,
-                        "B"
-                ));
+            // 确保有足够的数据点来展示所有标记类型
+            if (dataSize < 50) {
+                Toast.makeText(getContext(), "数据点不足，需要至少50个数据点来展示所有标记类型", Toast.LENGTH_LONG).show();
+                return;
             }
 
-            // 添加卖出标记（第30天）
-            if (dataSize > 30) {
-                markers.add(new MarkerData(
-                        klineDataList.get(30).getDate(),
-                        MarkerData.MarkerType.SELL,
-                        "S"
-                ));
-            }
+            // ========== 矩形背景 + 文字样式 ==========
 
-            // 添加数字标记（第20天）
-            if (dataSize > 20) {
-                MarkerData numberMarker = new MarkerData(
-                        klineDataList.get(20).getDate(),
-                        MarkerData.MarkerType.NUMBER,
-                        "1"
+            // 1. 买入标记 - 矩形背景
+            markers.add(MarkerData.createBuyMarker(
+                    klineDataList.get(5).getDate(),
+                    "买入"
+            ));
+
+            // 2. 卖出标记 - 矩形背景
+            markers.add(MarkerData.createSellMarker(
+                    klineDataList.get(15).getDate(),
+                    "卖出"
+            ));
+
+            // ========== 圆形背景 + 文字样式 ==========
+
+            // 3. 事件标记 - 圆形背景
+            markers.add(MarkerData.createEventMarker(
+                    klineDataList.get(10).getDate(),
+                    "财报"
+            ));
+
+            // 4. 警告标记 - 圆形背景
+            MarkerData warningMarker = new MarkerData(
+                    klineDataList.get(20).getDate(),
+                    MarkerType.WARNING,
+                    MarkerStyle.CIRCLE_TEXT,
+                    "!"
+            );
+            warningMarker.setTextColor(Color.WHITE);
+            warningMarker.setLineLength(LineLength.MEDIUM);
+            markers.add(warningMarker);
+
+            // 5. 信息标记 - 圆形背景
+            MarkerData infoMarker = new MarkerData(
+                    klineDataList.get(25).getDate(),
+                    MarkerType.INFO,
+                    MarkerStyle.CIRCLE_TEXT,
+                    "i"
+            );
+            infoMarker.setTextColor(Color.WHITE);
+            infoMarker.setLineLength(LineLength.SHORT);
+            markers.add(infoMarker);
+
+            // ========== 三角形样式 ==========
+
+            // 6. 数据激增 - 上三角形
+            MarkerData surgeMarker = MarkerData.createSurgeMarker(klineDataList.get(30).getDate());
+            surgeMarker.setLineLength(LineLength.NONE);
+            markers.add(surgeMarker);
+
+            // 7. 数据骤降 - 下三角形
+            MarkerData plungeMarker = MarkerData.createPlungeMarker(klineDataList.get(35).getDate());
+            plungeMarker.setLineLength(LineLength.NONE);
+            markers.add(plungeMarker);
+
+            // ========== 菱形背景 + 文字样式 ==========
+
+            // 8. 止损标记 - 菱形背景
+            MarkerData stopLossMarker = new MarkerData(
+                    klineDataList.get(40).getDate(),
+                    MarkerType.STOP_LOSS,
+                    MarkerStyle.DIAMOND_TEXT,
+                    "SL"
+            );
+            stopLossMarker.setTextColor(Color.WHITE);
+            stopLossMarker.setLineLength(LineLength.SHORT);
+            markers.add(stopLossMarker);
+
+            // 9. 止盈标记 - 菱形背景
+            MarkerData takeProfitMarker = new MarkerData(
+                    klineDataList.get(45).getDate(),
+                    MarkerType.TAKE_PROFIT,
+                    MarkerStyle.DIAMOND_TEXT,
+                    "TP"
+            );
+            takeProfitMarker.setTextColor(Color.WHITE);
+            takeProfitMarker.setLineLength(LineLength.SHORT);
+            markers.add(takeProfitMarker);
+
+            // ========== 纯文字样式 ==========
+
+            // 10. 纯文字标记
+            markers.add(MarkerData.createTextMarker(
+                    klineDataList.get(12).getDate(),
+                    "重要信息",
+                    LineLength.LONG
+            ));
+
+            // ========== 五角星样式 ==========
+
+            // 11. 五角星标记
+            MarkerData starMarker = new MarkerData(
+                    klineDataList.get(18).getDate(),
+                    MarkerType.CUSTOM,
+                    MarkerStyle.STAR,
+                    ""
+            );
+            starMarker.setLineLength(LineLength.MEDIUM);
+            markers.add(starMarker);
+
+            // ========== 圆点样式 ==========
+
+            // 12. 圆点标记
+            MarkerData dotMarker = new MarkerData(
+                    klineDataList.get(22).getDate(),
+                    MarkerType.CUSTOM,
+                    MarkerStyle.DOT,
+                    ""
+            );
+            dotMarker.setLineLength(LineLength.SHORT);
+            markers.add(dotMarker);
+
+            // ========== 十字标记样式 ==========
+
+            // 13. 十字标记
+            MarkerData crossMarker = new MarkerData(
+                    klineDataList.get(28).getDate(),
+                    MarkerType.CUSTOM,
+                    MarkerStyle.CROSS,
+                    ""
+            );
+            crossMarker.setLineLength(LineLength.MEDIUM);
+            markers.add(crossMarker);
+
+            // ========== 箭头样式 ==========
+
+            // 14. 箭头向上
+            MarkerData arrowUpMarker = new MarkerData(
+                    klineDataList.get(32).getDate(),
+                    MarkerType.CUSTOM,
+                    MarkerStyle.ARROW_UP,
+                    ""
+            );
+            arrowUpMarker.setLineLength(LineLength.SHORT);
+            markers.add(arrowUpMarker);
+
+            // 15. 箭头向下
+            MarkerData arrowDownMarker = new MarkerData(
+                    klineDataList.get(38).getDate(),
+                    MarkerType.CUSTOM,
+                    MarkerStyle.ARROW_DOWN,
+                    ""
+            );
+            arrowDownMarker.setLineLength(LineLength.SHORT);
+            markers.add(arrowDownMarker);
+
+            // ========== 自定义图标样式 ==========
+
+            // 16. 自定义图标 - 心形
+            if (getContext() != null) {
+                MarkerData customHeartMarker = new MarkerData(
+                        klineDataList.get(8).getDate(),
+                        MarkerType.CUSTOM,
+                        MarkerStyle.CUSTOM_ICON,
+                        ""
                 );
-                markers.add(numberMarker);
-
-                // 添加调试信息
-                Toast.makeText(getContext(), "添加数字标记: " + numberMarker.getText() + " 在第20天", Toast.LENGTH_SHORT).show();
+                customHeartMarker.setCustomIcon(getContext().getDrawable(R.drawable.ic_custom_heart));
+                customHeartMarker.setLineLength(LineLength.MEDIUM);
+                markers.add(customHeartMarker);
             }
 
-            // 添加三角标记（第50天和第70天）
-            if (dataSize > 50) {
-                markers.add(new MarkerData(
-                        klineDataList.get(50).getDate(),
-                        MarkerData.MarkerType.UP_TRIANGLE,
-                        "▲"
-                ));
+            // 17. 自定义图标 - 闪电
+            if (getContext() != null) {
+                MarkerData customLightningMarker = new MarkerData(
+                        klineDataList.get(42).getDate(),
+                        MarkerType.CUSTOM,
+                        MarkerStyle.CUSTOM_ICON,
+                        ""
+                );
+                customLightningMarker.setCustomIcon(getContext().getDrawable(R.drawable.ic_custom_lightning));
+                customLightningMarker.setLineLength(LineLength.LONG);
+                markers.add(customLightningMarker);
             }
 
-            if (dataSize > 70) {
-                markers.add(new MarkerData(
-                        klineDataList.get(70).getDate(),
-                        MarkerData.MarkerType.DOWN_TRIANGLE,
-                        "▼"
-                ));
+            // 18. 自定义图标 - 盾牌
+            if (getContext() != null) {
+                MarkerData customShieldMarker = new MarkerData(
+                        klineDataList.get(48).getDate(),
+                        MarkerType.CUSTOM,
+                        MarkerStyle.CUSTOM_ICON,
+                        ""
+                );
+                customShieldMarker.setCustomIcon(getContext().getDrawable(R.drawable.ic_custom_shield));
+                customShieldMarker.setLineLength(LineLength.EXTRA_LONG);
+                markers.add(customShieldMarker);
             }
+
+            // ========== 不同虚线长度演示 ==========
+
+            // 19. 无虚线示例
+            MarkerData noLineMarker = new MarkerData(
+                    klineDataList.get(2).getDate(),
+                    MarkerType.BUY,
+                    MarkerStyle.RECTANGLE_TEXT,
+                    "无线"
+            );
+            noLineMarker.setLineLength(LineLength.NONE);
+            markers.add(noLineMarker);
+
+            // 20. 超长虚线示例
+            MarkerData extraLongMarker = new MarkerData(
+                    klineDataList.get(47).getDate(),
+                    MarkerType.EVENT,
+                    MarkerStyle.CIRCLE_TEXT,
+                    "超长"
+            );
+            extraLongMarker.setTextColor(Color.WHITE);
+            extraLongMarker.setLineLength(LineLength.EXTRA_LONG);
+            markers.add(extraLongMarker);
         }
 
         markerManager.setMarkers(markers);
         markerManager.refresh();
 
-        Toast.makeText(getContext(), "已添加示例标记", Toast.LENGTH_SHORT).show();
+        Toast.makeText(getContext(), "已添加所有类型标记演示（共" + markers.size() + "个）", Toast.LENGTH_LONG).show();
     }
 
     private void addSampleTrendRegions() {
