@@ -17,8 +17,9 @@ import com.alex.klinemarker.core.MarkerConfig;
 import com.alex.klinemarker.core.TrendRegionConfig;
 import com.alex.klinemarker.data.LineLength;
 import com.alex.klinemarker.data.MarkerData;
-import com.alex.klinemarker.data.MarkerStyle;
-import com.alex.klinemarker.data.MarkerType;
+import com.alex.klinemarker.data.MarkerPosition;
+import com.alex.klinemarker.data.MarkerPresets;
+import com.alex.klinemarker.data.MarkerShape;
 import com.alex.klinemarker.data.TrendRegion;
 import com.alex.mpchart.sample.databinding.FragmentFirstBinding;
 import com.github.mikephil.charting.charts.CombinedChart;
@@ -154,18 +155,18 @@ public class FirstFragment extends Fragment {
         // 创建数据适配器
         KLineDataAdapterImpl adapter = new KLineDataAdapterImpl();
 
-        // 创建标记配置
+        // 创建标记配置 - 调整尺寸
         MarkerConfig markerConfig = new MarkerConfig.Builder()
-                .markerSize(12f) // 进一步减小标记大小
-                .textSize(10f) // 相应减小文字大小
-                .padding(3f) // 减小内边距
+                .markerSize(12f) // 调整标记大小 (从8f改为12f)
+                .textSize(8f) // 相应调整文字大小 (从7f改为8f)
+                .padding(2f) // 保持内边距
                 .buyColor(Color.parseColor("#00AA00"))
                 .sellColor(Color.parseColor("#FF4444"))
-                .numberColor(Color.parseColor("#2196F3")) // 使用更明显的蓝色
+                .numberColor(Color.parseColor("#2196F3")) 
                 .upTriangleColor(Color.parseColor("#FF6600"))
                 .downTriangleColor(Color.parseColor("#9C27B0"))
                 .textColor(Color.WHITE)
-                .numberTextColor(Color.BLACK) // 改为黑色文字，与蓝色背景形成对比
+                .numberTextColor(Color.BLACK) 
                 .build();
 
         // 创建趋势区间配置
@@ -389,216 +390,250 @@ public class FirstFragment extends Fragment {
                 return;
             }
 
-            // ========== 矩形背景 + 文字样式 ==========
+            // ========== 预定义标记样式 ==========
 
-            // 1. 买入标记 - 矩形背景
+            // 1. 买入标记
             markers.add(MarkerData.createBuyMarker(
                     klineDataList.get(5).getDate(),
-                    "买入"
+                    "B"  // 单个字母
             ));
 
-            // 2. 卖出标记 - 矩形背景
+            // 2. 卖出标记
             markers.add(MarkerData.createSellMarker(
                     klineDataList.get(15).getDate(),
-                    "卖出"
+                    "S"  // 单个字母
             ));
 
-            // ========== 圆形背景 + 文字样式 ==========
-
-            // 3. 事件标记 - 圆形背景
+            // 3. 事件标记
             markers.add(MarkerData.createEventMarker(
                     klineDataList.get(10).getDate(),
-                    "财报"
+                    "E"  // 单个字母
             ));
 
-            // 4. 警告标记 - 圆形背景
-            MarkerData warningMarker = new MarkerData(
+            // 4. 警告标记
+            markers.add(MarkerData.createWarningMarker(
                     klineDataList.get(20).getDate(),
-                    MarkerType.WARNING,
-                    MarkerStyle.CIRCLE_TEXT,
-                    "!"
-            );
-            warningMarker.setTextColor(Color.WHITE);
-            warningMarker.setLineLength(LineLength.MEDIUM);
-            markers.add(warningMarker);
+                    "!"  // 符号
+            ));
 
-            // 5. 信息标记 - 圆形背景
-            MarkerData infoMarker = new MarkerData(
+            // 5. 信息标记
+            markers.add(MarkerData.createInfoMarker(
                     klineDataList.get(25).getDate(),
-                    MarkerType.INFO,
-                    MarkerStyle.CIRCLE_TEXT,
-                    "i"
-            );
-            infoMarker.setTextColor(Color.WHITE);
-            infoMarker.setLineLength(LineLength.SHORT);
-            markers.add(infoMarker);
+                    "i"  // 单个字母
+            ));
 
-            // ========== 三角形样式 ==========
-
-            // 6. 数据激增 - 上三角形
-            MarkerData surgeMarker = MarkerData.createSurgeMarker(klineDataList.get(30).getDate());
-            surgeMarker.setLineLength(LineLength.NONE);
-            markers.add(surgeMarker);
-
-            // 7. 数据骤降 - 下三角形
-            MarkerData plungeMarker = MarkerData.createPlungeMarker(klineDataList.get(35).getDate());
-            plungeMarker.setLineLength(LineLength.NONE);
-            markers.add(plungeMarker);
-
-            // ========== 菱形背景 + 文字样式 ==========
-
-            // 8. 止损标记 - 菱形背景
-            MarkerData stopLossMarker = new MarkerData(
+            // 6. 止损标记
+            markers.add(MarkerData.createStopLossMarker(
                     klineDataList.get(40).getDate(),
-                    MarkerType.STOP_LOSS,
-                    MarkerStyle.DIAMOND_TEXT,
-                    "SL"
-            );
-            stopLossMarker.setTextColor(Color.WHITE);
-            stopLossMarker.setLineLength(LineLength.SHORT);
-            markers.add(stopLossMarker);
+                    "L"  // 单个字母
+            ));
 
-            // 9. 止盈标记 - 菱形背景
-            MarkerData takeProfitMarker = new MarkerData(
+            // 7. 止盈标记
+            markers.add(MarkerData.createTakeProfitMarker(
                     klineDataList.get(45).getDate(),
-                    MarkerType.TAKE_PROFIT,
-                    MarkerStyle.DIAMOND_TEXT,
-                    "TP"
-            );
-            takeProfitMarker.setTextColor(Color.WHITE);
-            takeProfitMarker.setLineLength(LineLength.SHORT);
-            markers.add(takeProfitMarker);
+                    "P"  // 单个字母
+            ));
 
-            // ========== 纯文字样式 ==========
-
-            // 10. 纯文字标记
+            // 8. 纯文字标记 - 支持多个汉字
             markers.add(MarkerData.createTextMarker(
                     klineDataList.get(12).getDate(),
-                    "重要信息",
-                    LineLength.LONG
+                    "重要消息"  // 多个汉字演示
             ));
 
-            // ========== 五角星样式 ==========
+            // 9. 圆点标记
+            markers.add(MarkerData.createDotMarker(klineDataList.get(22).getDate()));
 
-            // 11. 五角星标记
-            MarkerData starMarker = new MarkerData(
+            // ========== 多汉字纯文字标记演示 ==========
+
+            // 添加更多多汉字文字标记示例
+            markers.add(new MarkerData(
+                    klineDataList.get(7).getDate(),
+                    "业绩公告",
+                    new com.alex.klinemarker.data.MarkerConfig.Builder()
+                            .shape(MarkerShape.NONE)
+                            .textColor(0xFF1976D2)
+                            .textSize(10f)
+                            .showText(true)
+                            .showLine(true)
+                            .lineLength(LineLength.MEDIUM)
+                            .build()
+            ));
+
+            markers.add(new MarkerData(
+                    klineDataList.get(36).getDate(),
+                    "分红除权",
+                    new com.alex.klinemarker.data.MarkerConfig.Builder()
+                            .shape(MarkerShape.NONE)
+                            .textColor(0xFF388E3C)
+                            .textSize(10f)
+                            .showText(true)
+                            .showLine(true)
+                            .lineLength(LineLength.LONG)
+                            .build()
+            ));
+
+            markers.add(new MarkerData(
+                    klineDataList.get(44).getDate(),
+                    "主力资金流入",
+                    new com.alex.klinemarker.data.MarkerConfig.Builder()
+                            .shape(MarkerShape.NONE)
+                            .textColor(0xFFD32F2F)
+                            .textSize(10f)
+                            .showText(true)
+                            .showLine(true)
+                            .lineLength(LineLength.SHORT)
+                            .build()
+            ));
+
+            // ========== 自定义标记样式 ==========
+
+            // 10. 五角星标记
+            markers.add(new MarkerData(
                     klineDataList.get(18).getDate(),
-                    MarkerType.CUSTOM,
-                    MarkerStyle.STAR,
-                    ""
-            );
-            starMarker.setLineLength(LineLength.MEDIUM);
-            markers.add(starMarker);
+                    "",
+                    new com.alex.klinemarker.data.MarkerConfig.Builder()
+                            .shape(MarkerShape.STAR)
+                            .backgroundColor(0xFFFFD700)
+                            .markerSize(12f) // 调整尺寸 (从8f改为12f)
+                            .showText(false)
+                            .lineLength(LineLength.MEDIUM)
+                            .build()
+            ));
 
-            // ========== 圆点样式 ==========
-
-            // 12. 圆点标记
-            MarkerData dotMarker = new MarkerData(
-                    klineDataList.get(22).getDate(),
-                    MarkerType.CUSTOM,
-                    MarkerStyle.DOT,
-                    ""
-            );
-            dotMarker.setLineLength(LineLength.SHORT);
-            markers.add(dotMarker);
-
-            // ========== 十字标记样式 ==========
-
-            // 13. 十字标记
-            MarkerData crossMarker = new MarkerData(
+            // 11. 十字标记
+            markers.add(new MarkerData(
                     klineDataList.get(28).getDate(),
-                    MarkerType.CUSTOM,
-                    MarkerStyle.CROSS,
-                    ""
-            );
-            crossMarker.setLineLength(LineLength.MEDIUM);
-            markers.add(crossMarker);
+                    "",
+                    new com.alex.klinemarker.data.MarkerConfig.Builder()
+                            .shape(MarkerShape.CROSS)
+                            .backgroundColor(0xFF607D8B)
+                            .markerSize(12f) // 调整尺寸 (从8f改为12f)
+                            .showText(false)
+                            .lineLength(LineLength.MEDIUM)
+                            .build()
+            ));
 
-            // ========== 箭头样式 ==========
-
-            // 14. 箭头向上
-            MarkerData arrowUpMarker = new MarkerData(
+            // 12. 箭头向上
+            markers.add(new MarkerData(
                     klineDataList.get(32).getDate(),
-                    MarkerType.CUSTOM,
-                    MarkerStyle.ARROW_UP,
-                    ""
-            );
-            arrowUpMarker.setLineLength(LineLength.SHORT);
-            markers.add(arrowUpMarker);
+                    "",
+                    new com.alex.klinemarker.data.MarkerConfig.Builder()
+                            .shape(MarkerShape.ARROW_UP)
+                            .backgroundColor(0xFF8BC34A)
+                            .markerSize(12f) // 调整尺寸 (从8f改为12f)
+                            .showText(false)
+                            .lineLength(LineLength.SHORT)
+                            .build()
+            ));
 
-            // 15. 箭头向下
-            MarkerData arrowDownMarker = new MarkerData(
+            // 13. 箭头向下
+            markers.add(new MarkerData(
                     klineDataList.get(38).getDate(),
-                    MarkerType.CUSTOM,
-                    MarkerStyle.ARROW_DOWN,
-                    ""
-            );
-            arrowDownMarker.setLineLength(LineLength.SHORT);
-            markers.add(arrowDownMarker);
+                    "",
+                    new com.alex.klinemarker.data.MarkerConfig.Builder()
+                            .shape(MarkerShape.ARROW_DOWN)
+                            .backgroundColor(0xFFE91E63)
+                            .markerSize(12f) // 调整尺寸 (从8f改为12f)
+                            .showText(false)
+                            .lineLength(LineLength.SHORT)
+                            .build()
+            ));
 
-            // ========== 自定义图标样式 ==========
+            // 14. 菱形标记
+            markers.add(new MarkerData(
+                    klineDataList.get(30).getDate(),
+                    "D",  // 单个字母
+                    new com.alex.klinemarker.data.MarkerConfig.Builder()
+                            .shape(MarkerShape.DIAMOND)
+                            .backgroundColor(0xFF9C27B0)
+                            .textColor(0xFFFFFFFF)
+                            .markerSize(12f) // 调整尺寸 (从8f改为12f)
+                            .textSize(8f) // 调整文字尺寸 (从6f改为8f)
+                            .lineLength(LineLength.SHORT)
+                            .build()
+            ));
 
-            // 16. 自定义图标 - 心形
-            if (getContext() != null) {
-                MarkerData customHeartMarker = new MarkerData(
-                        klineDataList.get(8).getDate(),
-                        MarkerType.CUSTOM,
-                        MarkerStyle.CUSTOM_ICON,
-                        ""
-                );
-                customHeartMarker.setCustomIcon(getContext().getDrawable(R.drawable.ic_custom_heart));
-                customHeartMarker.setLineLength(LineLength.MEDIUM);
-                markers.add(customHeartMarker);
-            }
+            // 15. 三角形向上
+            markers.add(new MarkerData(
+                    klineDataList.get(35).getDate(),
+                    "",
+                    new com.alex.klinemarker.data.MarkerConfig.Builder()
+                            .shape(MarkerShape.TRIANGLE_UP)
+                            .backgroundColor(0xFF00C853)
+                            .markerSize(12f) // 调整尺寸 (从8f改为12f)
+                            .showText(false)
+                            .lineLength(LineLength.NONE)
+                            .build()
+            ));
 
-            // 17. 自定义图标 - 闪电
-            if (getContext() != null) {
-                MarkerData customLightningMarker = new MarkerData(
-                        klineDataList.get(42).getDate(),
-                        MarkerType.CUSTOM,
-                        MarkerStyle.CUSTOM_ICON,
-                        ""
-                );
-                customLightningMarker.setCustomIcon(getContext().getDrawable(R.drawable.ic_custom_lightning));
-                customLightningMarker.setLineLength(LineLength.LONG);
-                markers.add(customLightningMarker);
-            }
+            // 16. 三角形向下
+            markers.add(new MarkerData(
+                    klineDataList.get(42).getDate(),
+                    "",
+                    new com.alex.klinemarker.data.MarkerConfig.Builder()
+                            .shape(MarkerShape.TRIANGLE_DOWN)
+                            .backgroundColor(0xFFFF1744)
+                            .markerSize(12f) // 调整尺寸 (从8f改为12f)
+                            .showText(false)
+                            .lineLength(LineLength.NONE)
+                            .build()
+            ));
 
-            // 18. 自定义图标 - 盾牌
-            if (getContext() != null) {
-                MarkerData customShieldMarker = new MarkerData(
-                        klineDataList.get(48).getDate(),
-                        MarkerType.CUSTOM,
-                        MarkerStyle.CUSTOM_ICON,
-                        ""
-                );
-                customShieldMarker.setCustomIcon(getContext().getDrawable(R.drawable.ic_custom_shield));
-                customShieldMarker.setLineLength(LineLength.EXTRA_LONG);
-                markers.add(customShieldMarker);
-            }
+            // ========== 不同线条长度演示 ==========
 
-            // ========== 不同虚线长度演示 ==========
-
-            // 19. 无虚线示例
-            MarkerData noLineMarker = new MarkerData(
+            // 17. 无虚线示例
+            markers.add(new MarkerData(
                     klineDataList.get(2).getDate(),
-                    MarkerType.BUY,
-                    MarkerStyle.RECTANGLE_TEXT,
-                    "无线"
-            );
-            noLineMarker.setLineLength(LineLength.NONE);
-            markers.add(noLineMarker);
+                    "N",  // 单个字母
+                    new com.alex.klinemarker.data.MarkerConfig.Builder()
+                            .shape(MarkerShape.RECTANGLE)
+                            .backgroundColor(0xFF4CAF50)
+                            .textColor(0xFFFFFFFF)
+                            .markerSize(12f) // 调整尺寸 (从8f改为12f)
+                            .textSize(8f) // 调整文字尺寸 (从6f改为8f)
+                            .showLine(false)
+                            .build()
+            ));
 
-            // 20. 超长虚线示例
-            MarkerData extraLongMarker = new MarkerData(
+            // 18. 超长虚线示例
+            markers.add(new MarkerData(
                     klineDataList.get(47).getDate(),
-                    MarkerType.EVENT,
-                    MarkerStyle.CIRCLE_TEXT,
-                    "超长"
-            );
-            extraLongMarker.setTextColor(Color.WHITE);
-            extraLongMarker.setLineLength(LineLength.EXTRA_LONG);
-            markers.add(extraLongMarker);
+                    "X",  // 单个字母
+                    new com.alex.klinemarker.data.MarkerConfig.Builder()
+                            .shape(MarkerShape.CIRCLE)
+                            .backgroundColor(0xFF2196F3)
+                            .textColor(0xFFFFFFFF)
+                            .markerSize(12f) // 调整尺寸 (从8f改为12f)
+                            .textSize(8f) // 调整文字尺寸 (从6f改为8f)
+                            .lineLength(LineLength.EXTRA_LONG)
+                            .build()
+            ));
+
+            // ========== 基于预设的自定义 ==========
+
+            // 19. 自定义买入标记
+            markers.add(MarkerData.createCustomMarker(
+                    klineDataList.get(8).getDate(),
+                    "C",  // 单个字母
+                    MarkerPresets.customize(MarkerPresets.buy())
+                            .backgroundColor(0xFF00E676)
+                            .markerSize(12f) // 调整尺寸 (从8f改为12f)
+                            .textSize(8f) // 调整文字尺寸 (从6f改为8f)
+                            .build()
+            ));
+
+            // 20. 自定义警告标记
+            markers.add(MarkerData.createCustomMarker(
+                    klineDataList.get(48).getDate(),
+                    "W",  // 单个字母
+                    MarkerPresets.customize(MarkerPresets.warning())
+                            .position(MarkerPosition.BELOW)
+                            .dashedLine(false)
+                            .lineLength(LineLength.LONG)
+                            .markerSize(12f) // 调整尺寸 (从8f改为12f)
+                            .textSize(8f) // 调整文字尺寸 (从6f改为8f)
+                            .build()
+            ));
         }
 
         markerManager.setMarkers(markers);

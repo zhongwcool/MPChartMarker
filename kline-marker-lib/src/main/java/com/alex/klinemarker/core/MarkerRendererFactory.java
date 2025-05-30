@@ -2,7 +2,7 @@ package com.alex.klinemarker.core;
 
 import android.content.Context;
 
-import com.alex.klinemarker.data.MarkerStyle;
+import com.alex.klinemarker.data.MarkerShape;
 import com.alex.klinemarker.renderers.ArrowRenderer;
 import com.alex.klinemarker.renderers.CircleTextRenderer;
 import com.alex.klinemarker.renderers.CrossRenderer;
@@ -19,11 +19,11 @@ import java.util.Map;
 
 /**
  * 标记渲染器工厂
- * 负责创建和管理不同样式的标记渲染器
+ * 负责创建和管理不同形状的标记渲染器
  */
 public class MarkerRendererFactory {
 
-    private final Map<MarkerStyle, IMarkerRenderer> renderers;
+    private final Map<MarkerShape, IMarkerRenderer> renderers;
     private final float density;
 
     public MarkerRendererFactory(Context context) {
@@ -39,63 +39,63 @@ public class MarkerRendererFactory {
      */
     private void initRenderers() {
         // 矩形背景 + 文字
-        renderers.put(MarkerStyle.RECTANGLE_TEXT, new RectangleTextRenderer(density));
+        renderers.put(MarkerShape.RECTANGLE, new RectangleTextRenderer(density));
 
         // 圆形背景 + 文字
-        renderers.put(MarkerStyle.CIRCLE_TEXT, new CircleTextRenderer(density));
+        renderers.put(MarkerShape.CIRCLE, new CircleTextRenderer(density));
 
         // 三角形（共用一个渲染器）
         TriangleRenderer triangleRenderer = new TriangleRenderer(density);
-        renderers.put(MarkerStyle.TRIANGLE_UP, triangleRenderer);
-        renderers.put(MarkerStyle.TRIANGLE_DOWN, triangleRenderer);
+        renderers.put(MarkerShape.TRIANGLE_UP, triangleRenderer);
+        renderers.put(MarkerShape.TRIANGLE_DOWN, triangleRenderer);
 
         // 纯文字
-        renderers.put(MarkerStyle.TEXT_ONLY, new TextOnlyRenderer(density));
+        renderers.put(MarkerShape.NONE, new TextOnlyRenderer(density));
 
         // 菱形背景 + 文字
-        renderers.put(MarkerStyle.DIAMOND_TEXT, new DiamondTextRenderer(density));
+        renderers.put(MarkerShape.DIAMOND, new DiamondTextRenderer(density));
 
         // 几何图形渲染器
-        renderers.put(MarkerStyle.STAR, new StarRenderer(density));
-        renderers.put(MarkerStyle.DOT, new DotRenderer(density));
-        renderers.put(MarkerStyle.CROSS, new CrossRenderer(density));
+        renderers.put(MarkerShape.STAR, new StarRenderer(density));
+        renderers.put(MarkerShape.DOT, new DotRenderer(density));
+        renderers.put(MarkerShape.CROSS, new CrossRenderer(density));
 
         // 箭头渲染器（共用一个渲染器）
         ArrowRenderer arrowRenderer = new ArrowRenderer(density);
-        renderers.put(MarkerStyle.ARROW_UP, arrowRenderer);
-        renderers.put(MarkerStyle.ARROW_DOWN, arrowRenderer);
+        renderers.put(MarkerShape.ARROW_UP, arrowRenderer);
+        renderers.put(MarkerShape.ARROW_DOWN, arrowRenderer);
 
         // 自定义图标渲染器
-        renderers.put(MarkerStyle.CUSTOM_ICON, new CustomIconRenderer(density));
+        renderers.put(MarkerShape.CUSTOM_ICON, new CustomIconRenderer(density));
     }
 
     /**
-     * 获取指定样式的渲染器
+     * 获取指定形状的渲染器
      *
-     * @param style 标记样式
+     * @param shape 标记形状
      * @return 对应的渲染器，如果没有找到则返回null
      */
-    public IMarkerRenderer getRenderer(MarkerStyle style) {
-        return renderers.get(style);
+    public IMarkerRenderer getRenderer(MarkerShape shape) {
+        return renderers.get(shape);
     }
 
     /**
      * 注册自定义渲染器
      *
-     * @param style    标记样式
+     * @param shape    标记形状
      * @param renderer 渲染器实例
      */
-    public void registerRenderer(MarkerStyle style, IMarkerRenderer renderer) {
-        renderers.put(style, renderer);
+    public void registerRenderer(MarkerShape shape, IMarkerRenderer renderer) {
+        renderers.put(shape, renderer);
     }
 
     /**
-     * 检查是否支持指定的样式
+     * 检查是否支持指定的形状
      *
-     * @param style 标记样式
+     * @param shape 标记形状
      * @return 是否支持
      */
-    public boolean supportsStyle(MarkerStyle style) {
-        return renderers.containsKey(style);
+    public boolean supportsShape(MarkerShape shape) {
+        return renderers.containsKey(shape);
     }
 } 

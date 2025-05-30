@@ -69,7 +69,7 @@ public class KLineMarkerManager<T> {
         this.context = context;
         this.chart = chart;
         this.dataAdapter = dataAdapter;
-        this.markerRenderer = new KLineMarkerRenderer<>(context, chart, dataAdapter, markerConfig);
+        this.markerRenderer = new KLineMarkerRenderer<>(context, chart, dataAdapter);
         this.trendRegionRenderer = new TrendRegionRenderer<>(context, chart, dataAdapter, trendRegionConfig);
 
         // 设置自定义渲染器

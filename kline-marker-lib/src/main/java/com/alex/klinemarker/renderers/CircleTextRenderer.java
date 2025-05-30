@@ -3,21 +3,21 @@ package com.alex.klinemarker.renderers;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Paint;
+import android.graphics.Rect;
 
 import com.alex.klinemarker.core.IMarkerRenderer;
-import com.alex.klinemarker.core.MarkerConfig;
 import com.alex.klinemarker.data.MarkerData;
-import com.alex.klinemarker.data.MarkerStyle;
+import com.alex.klinemarker.data.MarkerShape;
 
 /**
- * 圆形背景 + 文字的标记渲染器
- * 用于渲染事件、信息等标记
+ * 圆形背景 + 文字标记渲染器
  */
 public class CircleTextRenderer implements IMarkerRenderer {
 
     private final Paint backgroundPaint;
     private final Paint textPaint;
     private final float density;
+    private final Rect textBounds = new Rect();
 
     public CircleTextRenderer(float density) {
         this.density = density;
@@ -30,75 +30,74 @@ public class CircleTextRenderer implements IMarkerRenderer {
     }
 
     @Override
-    public void drawMarker(Canvas canvas, float centerX, float centerY, MarkerData marker, MarkerConfig config, Context context) {
-        // 获取标记大小
-        float markerSize = marker.getSize() > 0 ? marker.getSize() : config.getMarkerSize();
-        float radius = markerSize * density / 2;
-
-        // 设置背景颜色
-        int bgColor = marker.getColor() != 0 ? marker.getColor() : getDefaultColor(marker, config);
-        backgroundPaint.setColor(bgColor);
-
-        // 设置文字颜色和大小
-        int textColor = marker.getTextColor() != 0 ? marker.getTextColor() : config.getTextColor();
-        textPaint.setColor(textColor);
-        textPaint.setTextSize(config.getTextSize() * density * 0.8f); // 圆形中的文字稍小一些
-        textPaint.setTypeface(config.getTextTypeface());
-
-        // 如果有文字，可能需要调整圆的大小
+    public void drawMarker(Canvas canvas, float centerX, float centerY, MarkerData marker, Context context) {
         String text = marker.getText();
-        if (text != null && !text.isEmpty()) {
-            float textWidth = textPaint.measureText(text);
-            float minRadius = (textWidth + config.getPadding() * density) / 2;
-            radius = Math.max(radius, minRadius);
+        if (text == null || text.isEmpty()) {
+            text = ""; // 空文本也绘制背景
         }
 
+        // 设置文字样式
+        textPaint.setTextSize(marker.getConfig().getTextSize() * density);
+        textPaint.setColor(marker.getConfig().getTextColor());
+
+        // 测量文字尺寸
+        textPaint.getTextBounds(text, 0, text.length(), textBounds);
+        float textWidth = textBounds.width();
+        float textHeight = textBounds.height();
+
+        // 计算圆形背景大小
+        float padding = marker.getConfig().getMarkerSize() * density * 0.3f;
+        float minRadius = marker.getConfig().getMarkerSize() * density / 2;
+        float contentRadius = Math.max(textWidth / 2 + padding, textHeight / 2 + padding);
+        float radius = Math.max(minRadius, contentRadius);
+
         // 绘制圆形背景
+        backgroundPaint.setColor(marker.getConfig().getBackgroundColor());
+        backgroundPaint.setAlpha((int) (marker.getConfig().getAlpha() * 255));
         canvas.drawCircle(centerX, centerY, radius, backgroundPaint);
 
         // 绘制文字
-        if (text != null && !text.isEmpty()) {
-            float textY = centerY + (textPaint.getTextSize() / 3);
+        if (marker.getConfig().isShowText() && !text.isEmpty()) {
+            // 计算文字基线位置
+            float textY = centerY + textHeight / 2f;
             canvas.drawText(text, centerX, textY, textPaint);
         }
     }
 
     @Override
-    public float getMarkerWidth(MarkerData marker, MarkerConfig config) {
-        float markerSize = marker.getSize() > 0 ? marker.getSize() : config.getMarkerSize();
-        float diameter = markerSize * density;
-
-        String text = marker.getText();
-        if (text != null && !text.isEmpty()) {
-            textPaint.setTextSize(config.getTextSize() * density * 0.8f);
-            float textWidth = textPaint.measureText(text);
-            float minDiameter = textWidth + config.getPadding() * density;
-            diameter = Math.max(diameter, minDiameter);
+    public float getMarkerWidth(MarkerData marker) {
+        if (!marker.getConfig().isShowText() || marker.getText() == null || marker.getText().isEmpty()) {
+            return marker.getConfig().getMarkerSize() * density;
         }
 
-        return diameter;
+        textPaint.setTextSize(marker.getConfig().getTextSize() * density);
+        textPaint.getTextBounds(marker.getText(), 0, marker.getText().length(), textBounds);
+
+        float padding = marker.getConfig().getMarkerSize() * density * 0.3f;
+        float minWidth = marker.getConfig().getMarkerSize() * density;
+        float contentWidth = textBounds.width() + padding * 2;
+
+        return Math.max(minWidth, contentWidth);
     }
 
     @Override
-    public float getMarkerHeight(MarkerData marker, MarkerConfig config) {
-        return getMarkerWidth(marker, config); // 圆形宽高相等
+    public float getMarkerHeight(MarkerData marker) {
+        if (!marker.getConfig().isShowText() || marker.getText() == null || marker.getText().isEmpty()) {
+            return marker.getConfig().getMarkerSize() * density;
+        }
+
+        textPaint.setTextSize(marker.getConfig().getTextSize() * density);
+        textPaint.getTextBounds(marker.getText(), 0, marker.getText().length(), textBounds);
+
+        float padding = marker.getConfig().getMarkerSize() * density * 0.3f;
+        float minHeight = marker.getConfig().getMarkerSize() * density;
+        float contentHeight = textBounds.height() + padding * 2;
+
+        return Math.max(minHeight, contentHeight);
     }
 
     @Override
-    public boolean supportsStyle(MarkerStyle style) {
-        return style == MarkerStyle.CIRCLE_TEXT;
-    }
-
-    private int getDefaultColor(MarkerData marker, MarkerConfig config) {
-        switch (marker.getType()) {
-            case EVENT:
-                return config.getNumberColor(); // 使用数字标记的颜色作为事件颜色
-            case INFO:
-                return 0xFF2196F3; // 蓝色
-            case WARNING:
-                return 0xFFFF9800; // 橙色
-            default:
-                return config.getBuyColor();
-        }
+    public boolean supportsShape(MarkerShape shape) {
+        return shape == MarkerShape.CIRCLE;
     }
 } 

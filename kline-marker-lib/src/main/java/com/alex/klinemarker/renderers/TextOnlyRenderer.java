@@ -3,67 +3,84 @@ package com.alex.klinemarker.renderers;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Paint;
+import android.graphics.Rect;
 
 import com.alex.klinemarker.core.IMarkerRenderer;
-import com.alex.klinemarker.core.MarkerConfig;
 import com.alex.klinemarker.data.MarkerData;
-import com.alex.klinemarker.data.MarkerStyle;
+import com.alex.klinemarker.data.MarkerShape;
 
 /**
  * 纯文字标记渲染器
- * 只绘制文字，连接线由KLineMarkerRenderer处理
+ * 只显示文字，无背景形状
+ * 支持多个汉字显示，文字从指示线末端开始，使用加粗字体
  */
 public class TextOnlyRenderer implements IMarkerRenderer {
 
     private final Paint textPaint;
     private final float density;
+    private final Rect textBounds = new Rect();
 
     public TextOnlyRenderer(float density) {
         this.density = density;
 
         textPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         textPaint.setTextAlign(Paint.Align.LEFT);
+        // 优化文字渲染质量，特别适合汉字显示
+        textPaint.setSubpixelText(true);
+        textPaint.setLinearText(true);
+        textPaint.setTypeface(android.graphics.Typeface.DEFAULT_BOLD);
     }
 
     @Override
-    public void drawMarker(Canvas canvas, float centerX, float centerY, MarkerData marker, MarkerConfig config, Context context) {
-        // 设置文字颜色和大小
-        int textColor = marker.getTextColor() != 0 ? marker.getTextColor() : config.getNumberTextColor();
-        textPaint.setColor(textColor);
-        textPaint.setTextSize(config.getTextSize() * density);
-        textPaint.setTypeface(config.getTextTypeface());
-
+    public void drawMarker(Canvas canvas, float centerX, float centerY, MarkerData marker, Context context) {
         String text = marker.getText();
-        if (text == null || text.isEmpty()) {
+        if (text == null || text.isEmpty() || !marker.getConfig().isShowText()) {
             return;
         }
 
-        // 文字从传入的centerX位置开始绘制，与引出线末端对齐
-        // 不添加额外的padding，因为centerX已经是引出线的末端位置
-        float textX = centerX + 2 * density; // 只加一个很小的间距，避免文字与引出线重叠
-        float textY = centerY + (textPaint.getTextSize() / 3);
+        // 设置文字样式
+        textPaint.setTextSize(marker.getConfig().getTextSize() * density);
+        textPaint.setColor(marker.getConfig().getTextColor());
+        textPaint.setAlpha((int) (marker.getConfig().getAlpha() * 255));
+
+        // 测量文字尺寸以正确定位
+        textPaint.getTextBounds(text, 0, text.length(), textBounds);
+
+        // 计算文字基线位置，确保汉字正确居中
+        Paint.FontMetrics fontMetrics = textPaint.getFontMetrics();
+        float textY = centerY + (fontMetrics.bottom - fontMetrics.top) / 2 - fontMetrics.bottom;
+
+        // 添加小的偏移，让文字稍微远离指示线末端
+        float textX = centerX + 4 * density;
+
+        // 绘制文字（从指示线末端开始，支持任意长度的文字，包括多个汉字）
         canvas.drawText(text, textX, textY, textPaint);
     }
 
     @Override
-    public float getMarkerWidth(MarkerData marker, MarkerConfig config) {
-        String text = marker.getText();
-        if (text != null && !text.isEmpty()) {
-            textPaint.setTextSize(config.getTextSize() * density);
-            float textWidth = textPaint.measureText(text);
-            float padding = config.getPadding() * density;
-            return textWidth + padding * 2; // 文字宽度 + 左右边距
+    public float getMarkerWidth(MarkerData marker) {
+        if (!marker.getConfig().isShowText() || marker.getText() == null || marker.getText().isEmpty()) {
+            return 4 * density; // 只有偏移距离
         }
-        return 0;
+
+        textPaint.setTextSize(marker.getConfig().getTextSize() * density);
+        float textWidth = textPaint.measureText(marker.getText());
+        return textWidth + 4 * density; // 文字宽度 + 偏移距离
     }
 
     @Override
-    public float getMarkerHeight(MarkerData marker, MarkerConfig config) {
-        return config.getTextSize() * density * 1.5f; // 文字高度
+    public float getMarkerHeight(MarkerData marker) {
+        if (!marker.getConfig().isShowText() || marker.getText() == null || marker.getText().isEmpty()) {
+            return 0;
+        }
+
+        textPaint.setTextSize(marker.getConfig().getTextSize() * density);
+        textPaint.getTextBounds(marker.getText(), 0, marker.getText().length(), textBounds);
+        return textBounds.height();
     }
 
     @Override
-    public boolean supportsStyle(MarkerStyle style) {
-        return style == MarkerStyle.TEXT_ONLY;
+    public boolean supportsShape(MarkerShape shape) {
+        return shape == MarkerShape.NONE;
     }
 } 

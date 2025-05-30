@@ -6,12 +6,12 @@ import android.graphics.Paint;
 import android.graphics.Path;
 
 import com.alex.klinemarker.core.IMarkerRenderer;
-import com.alex.klinemarker.core.MarkerConfig;
 import com.alex.klinemarker.data.MarkerData;
-import com.alex.klinemarker.data.MarkerStyle;
+import com.alex.klinemarker.data.MarkerShape;
 
 /**
  * 五角星标记渲染器
+ * 绘制五角星形状
  */
 public class StarRenderer implements IMarkerRenderer {
 
@@ -26,16 +26,15 @@ public class StarRenderer implements IMarkerRenderer {
     }
 
     @Override
-    public void drawMarker(Canvas canvas, float centerX, float centerY, MarkerData marker, MarkerConfig config, Context context) {
-        // 获取标准标记大小
-        float markerSize = marker.getSize() > 0 ? marker.getSize() : config.getMarkerSize();
-        float radius = markerSize * density / 2;
+    public void drawMarker(Canvas canvas, float centerX, float centerY, MarkerData marker, Context context) {
+        // 获取标记大小 - 修复五角星过小问题
+        float radius = marker.getConfig().getMarkerSize() * density / 2f;
 
         // 设置颜色
-        int color = marker.getColor() != 0 ? marker.getColor() : 0xFFFFD700; // 默认金色
-        starPaint.setColor(color);
+        starPaint.setColor(marker.getConfig().getBackgroundColor());
+        starPaint.setAlpha((int) (marker.getConfig().getAlpha() * 255));
 
-        // 绘制五角星
+        // 创建五角星路径
         Path starPath = createStarPath(centerX, centerY, radius);
         canvas.drawPath(starPath, starPaint);
     }
@@ -43,26 +42,27 @@ public class StarRenderer implements IMarkerRenderer {
     /**
      * 创建五角星路径
      */
-    private Path createStarPath(float centerX, float centerY, float outerRadius) {
+    private Path createStarPath(float centerX, float centerY, float radius) {
         Path path = new Path();
-        float innerRadius = outerRadius * 0.4f; // 内半径为外半径的40%
+        float innerRadius = radius * 0.4f;
 
+        // 五角星的5个外顶点和5个内顶点
         double angleStep = Math.PI / 5; // 36度
-        double startAngle = -Math.PI / 2; // 从正上方开始
+        double startAngle = -Math.PI / 2; // 从顶部开始
 
-        // 五角星有10个点（5个外角点 + 5个内角点）
-        for (int i = 0; i < 10; i++) {
+        boolean isOuter = true;
+        for (int i = 0; i <= 10; i++) {
             double angle = startAngle + i * angleStep;
-            float radius = (i % 2 == 0) ? outerRadius : innerRadius;
-
-            float x = centerX + (float) (Math.cos(angle) * radius);
-            float y = centerY + (float) (Math.sin(angle) * radius);
+            float r = isOuter ? radius : innerRadius;
+            float x = centerX + (float) (r * Math.cos(angle));
+            float y = centerY + (float) (r * Math.sin(angle));
 
             if (i == 0) {
                 path.moveTo(x, y);
             } else {
                 path.lineTo(x, y);
             }
+            isOuter = !isOuter;
         }
 
         path.close();
@@ -70,19 +70,17 @@ public class StarRenderer implements IMarkerRenderer {
     }
 
     @Override
-    public float getMarkerWidth(MarkerData marker, MarkerConfig config) {
-        float markerSize = marker.getSize() > 0 ? marker.getSize() : config.getMarkerSize();
-        return markerSize * density; // 统一大小
+    public float getMarkerWidth(MarkerData marker) {
+        return marker.getConfig().getMarkerSize() * density;
     }
 
     @Override
-    public float getMarkerHeight(MarkerData marker, MarkerConfig config) {
-        float markerSize = marker.getSize() > 0 ? marker.getSize() : config.getMarkerSize();
-        return markerSize * density; // 统一大小
+    public float getMarkerHeight(MarkerData marker) {
+        return marker.getConfig().getMarkerSize() * density;
     }
 
     @Override
-    public boolean supportsStyle(MarkerStyle style) {
-        return style == MarkerStyle.STAR;
+    public boolean supportsShape(MarkerShape shape) {
+        return shape == MarkerShape.STAR;
     }
 } 

@@ -1,7 +1,5 @@
 package com.alex.klinemarker.data;
 
-import android.graphics.drawable.Drawable;
-
 import java.util.Date;
 
 /**
@@ -11,91 +9,120 @@ import java.util.Date;
 public class MarkerData {
 
     private Date date;              // 标记日期
-    private MarkerType type;        // 标记类型（业务含义）
-    private MarkerStyle style;      // 标记样式（视觉表现）
     private String text;            // 标记显示文本
-    private int color;              // 标记颜色（可选，使用默认颜色时传入0）
-    private int textColor;          // 文字颜色（可选）
-    private float size;             // 标记大小（可选，0表示使用默认大小）
-    private LineLength lineLength;  // 虚线长度类型
-    private Drawable customIcon;    // 自定义图标（当style为CUSTOM_ICON时使用）
+    private MarkerConfig config;    // 标记配置（包含所有视觉属性）
     private Object extraData;       // 额外数据，用于扩展
 
+    /**
+     * 默认构造函数
+     */
     public MarkerData() {
-        this.type = MarkerType.NONE;
-        this.style = MarkerStyle.RECTANGLE_TEXT;
         this.text = "";
-        this.color = 0;
-        this.textColor = 0;
-        this.size = 0;
-        this.lineLength = LineLength.MEDIUM; // 默认中等长度
+        this.config = new MarkerConfig();
     }
 
-    public MarkerData(Date date, MarkerType type, MarkerStyle style, String text) {
+    /**
+     * 基本构造函数
+     *
+     * @param date   日期
+     * @param text   文本
+     * @param config 标记配置
+     */
+    public MarkerData(Date date, String text, MarkerConfig config) {
         this.date = date;
-        this.type = type;
-        this.style = style;
         this.text = text;
-        this.color = 0;
-        this.textColor = 0;
-        this.size = 0;
-        this.lineLength = LineLength.MEDIUM; // 默认中等长度
+        this.config = config != null ? config.copy() : new MarkerConfig(); // 复制配置，避免共享引用
     }
 
-    public MarkerData(Date date, MarkerType type, MarkerStyle style, String text, int color) {
-        this.date = date;
-        this.type = type;
-        this.style = style;
-        this.text = text;
-        this.color = color;
-        this.textColor = 0;
-        this.size = 0;
-        this.lineLength = LineLength.MEDIUM; // 默认中等长度
-    }
+    // 便捷构造方法，使用预定义配置
 
-    public MarkerData(Date date, MarkerType type, MarkerStyle style, String text, int color, LineLength lineLength) {
-        this.date = date;
-        this.type = type;
-        this.style = style;
-        this.text = text;
-        this.color = color;
-        this.textColor = 0;
-        this.size = 0;
-        this.lineLength = lineLength;
-    }
-
-    // 便捷构造方法，用于创建常见的标记
+    /**
+     * 创建买入标记
+     */
     public static MarkerData createBuyMarker(Date date, String text) {
-        return new MarkerData(date, MarkerType.BUY, MarkerStyle.RECTANGLE_TEXT, text, 0, LineLength.SHORT);
+        return new MarkerData(date, text, MarkerPresets.buy());
     }
 
+    /**
+     * 创建卖出标记
+     */
     public static MarkerData createSellMarker(Date date, String text) {
-        return new MarkerData(date, MarkerType.SELL, MarkerStyle.RECTANGLE_TEXT, text, 0, LineLength.SHORT);
+        return new MarkerData(date, text, MarkerPresets.sell());
     }
 
-    public static MarkerData createSurgeMarker(Date date) {
-        return new MarkerData(date, MarkerType.SURGE, MarkerStyle.TRIANGLE_UP, "", 0, LineLength.SHORT);
+    /**
+     * 创建警告标记
+     */
+    public static MarkerData createWarningMarker(Date date, String text) {
+        return new MarkerData(date, text, MarkerPresets.warning());
     }
 
-    public static MarkerData createPlungeMarker(Date date) {
-        return new MarkerData(date, MarkerType.PLUNGE, MarkerStyle.TRIANGLE_DOWN, "", 0, LineLength.SHORT);
+    /**
+     * 创建信息标记
+     */
+    public static MarkerData createInfoMarker(Date date, String text) {
+        return new MarkerData(date, text, MarkerPresets.info());
     }
 
+    /**
+     * 创建事件标记
+     */
     public static MarkerData createEventMarker(Date date, String text) {
-        return new MarkerData(date, MarkerType.EVENT, MarkerStyle.CIRCLE_TEXT, text, 0, LineLength.LONG);
+        return new MarkerData(date, text, MarkerPresets.event());
     }
 
-    // 新增便捷方法，支持指定虚线长度
-    public static MarkerData createBuyMarker(Date date, String text, LineLength lineLength) {
-        return new MarkerData(date, MarkerType.BUY, MarkerStyle.RECTANGLE_TEXT, text, 0, lineLength);
+    /**
+     * 创建止损标记
+     */
+    public static MarkerData createStopLossMarker(Date date, String text) {
+        return new MarkerData(date, text, MarkerPresets.stopLoss());
     }
 
-    public static MarkerData createSellMarker(Date date, String text, LineLength lineLength) {
-        return new MarkerData(date, MarkerType.SELL, MarkerStyle.RECTANGLE_TEXT, text, 0, lineLength);
+    /**
+     * 创建止盈标记
+     */
+    public static MarkerData createTakeProfitMarker(Date date, String text) {
+        return new MarkerData(date, text, MarkerPresets.takeProfit());
     }
 
-    public static MarkerData createTextMarker(Date date, String text, LineLength lineLength) {
-        return new MarkerData(date, MarkerType.INFO, MarkerStyle.TEXT_ONLY, text, 0, lineLength);
+    /**
+     * 创建纯文本标记
+     */
+    public static MarkerData createTextMarker(Date date, String text) {
+        return new MarkerData(date, text, MarkerPresets.textOnly());
+    }
+
+    /**
+     * 创建重要标记
+     */
+    public static MarkerData createImportantMarker(Date date, String text) {
+        return new MarkerData(date, text, MarkerPresets.important());
+    }
+
+    /**
+     * 创建简单点标记（不显示文字）
+     */
+    public static MarkerData createDotMarker(Date date) {
+        return new MarkerData(date, "", MarkerPresets.dot());
+    }
+
+    /**
+     * 创建自定义标记
+     *
+     * @param date         日期
+     * @param text         文本
+     * @param customConfig 自定义配置
+     */
+    public static MarkerData createCustomMarker(Date date, String text, MarkerConfig customConfig) {
+        return new MarkerData(date, text, customConfig);
+    }
+
+    /**
+     * 基于预设创建自定义标记
+     * 示例：MarkerData.createCustomMarker(date, "Custom", MarkerPresets.customize(MarkerPresets.info()).backgroundColor(0xFF00FF00).build())
+     */
+    public static MarkerData createCustomMarker(Date date, String text, MarkerConfig.Builder configBuilder) {
+        return new MarkerData(date, text, configBuilder.build());
     }
 
     // Getters and Setters
@@ -107,22 +134,6 @@ public class MarkerData {
         this.date = date;
     }
 
-    public MarkerType getType() {
-        return type;
-    }
-
-    public void setType(MarkerType type) {
-        this.type = type;
-    }
-
-    public MarkerStyle getStyle() {
-        return style;
-    }
-
-    public void setStyle(MarkerStyle style) {
-        this.style = style;
-    }
-
     public String getText() {
         return text;
     }
@@ -131,44 +142,12 @@ public class MarkerData {
         this.text = text;
     }
 
-    public int getColor() {
-        return color;
+    public MarkerConfig getConfig() {
+        return config;
     }
 
-    public void setColor(int color) {
-        this.color = color;
-    }
-
-    public int getTextColor() {
-        return textColor;
-    }
-
-    public void setTextColor(int textColor) {
-        this.textColor = textColor;
-    }
-
-    public float getSize() {
-        return size;
-    }
-
-    public void setSize(float size) {
-        this.size = size;
-    }
-
-    public LineLength getLineLength() {
-        return lineLength;
-    }
-
-    public void setLineLength(LineLength lineLength) {
-        this.lineLength = lineLength;
-    }
-
-    public Drawable getCustomIcon() {
-        return customIcon;
-    }
-
-    public void setCustomIcon(Drawable customIcon) {
-        this.customIcon = customIcon;
+    public void setConfig(MarkerConfig config) {
+        this.config = config;
     }
 
     public Object getExtraData() {
@@ -194,12 +173,9 @@ public class MarkerData {
     public String toString() {
         return "MarkerData{" +
                 "date=" + date +
-                ", type=" + type +
-                ", style=" + style +
                 ", text='" + text + '\'' +
-                ", color=" + color +
-                ", lineLength=" + lineLength +
-                ", size=" + size +
+                ", config=" + config +
+                ", extraData=" + extraData +
                 '}';
     }
 } 

@@ -6,13 +6,12 @@ import android.graphics.Paint;
 import android.graphics.Path;
 
 import com.alex.klinemarker.core.IMarkerRenderer;
-import com.alex.klinemarker.core.MarkerConfig;
 import com.alex.klinemarker.data.MarkerData;
-import com.alex.klinemarker.data.MarkerStyle;
+import com.alex.klinemarker.data.MarkerShape;
 
 /**
  * 三角形标记渲染器
- * 用于渲染上三角和下三角标记
+ * 支持向上和向下三角形
  */
 public class TriangleRenderer implements IMarkerRenderer {
 
@@ -27,58 +26,53 @@ public class TriangleRenderer implements IMarkerRenderer {
     }
 
     @Override
-    public void drawMarker(Canvas canvas, float centerX, float centerY, MarkerData marker, MarkerConfig config, Context context) {
+    public void drawMarker(Canvas canvas, float centerX, float centerY, MarkerData marker, Context context) {
         // 获取标记大小
-        float markerSize = marker.getSize() > 0 ? marker.getSize() : config.getMarkerSize();
-        float halfSize = markerSize * density / 2;
+        float size = marker.getConfig().getMarkerSize() * density / 2;
 
         // 设置颜色
-        int color = marker.getColor() != 0 ? marker.getColor() : getDefaultColor(marker, config);
-        trianglePaint.setColor(color);
+        trianglePaint.setColor(marker.getConfig().getBackgroundColor());
+        trianglePaint.setAlpha((int) (marker.getConfig().getAlpha() * 255));
 
         // 创建三角形路径
-        Path trianglePath = new Path();
-
-        if (marker.getStyle() == MarkerStyle.TRIANGLE_UP) {
-            // 上三角
-            trianglePath.moveTo(centerX, centerY - halfSize);
-            trianglePath.lineTo(centerX - halfSize, centerY + halfSize);
-            trianglePath.lineTo(centerX + halfSize, centerY + halfSize);
-            trianglePath.close();
-        } else {
-            // 下三角
-            trianglePath.moveTo(centerX, centerY + halfSize);
-            trianglePath.lineTo(centerX - halfSize, centerY - halfSize);
-            trianglePath.lineTo(centerX + halfSize, centerY - halfSize);
-            trianglePath.close();
-        }
-
-        // 绘制三角形
+        Path trianglePath = createTrianglePath(centerX, centerY, size, marker.getConfig().getShape());
         canvas.drawPath(trianglePath, trianglePaint);
     }
 
-    @Override
-    public float getMarkerWidth(MarkerData marker, MarkerConfig config) {
-        float markerSize = marker.getSize() > 0 ? marker.getSize() : config.getMarkerSize();
-        return markerSize * density;
-    }
+    /**
+     * 创建三角形路径
+     */
+    private Path createTrianglePath(float centerX, float centerY, float size, MarkerShape shape) {
+        Path path = new Path();
 
-    @Override
-    public float getMarkerHeight(MarkerData marker, MarkerConfig config) {
-        float markerSize = marker.getSize() > 0 ? marker.getSize() : config.getMarkerSize();
-        return markerSize * density;
-    }
-
-    @Override
-    public boolean supportsStyle(MarkerStyle style) {
-        return style == MarkerStyle.TRIANGLE_UP || style == MarkerStyle.TRIANGLE_DOWN;
-    }
-
-    private int getDefaultColor(MarkerData marker, MarkerConfig config) {
-        if (marker.getStyle() == MarkerStyle.TRIANGLE_UP) {
-            return config.getUpTriangleColor();
+        if (shape == MarkerShape.TRIANGLE_UP) {
+            // 向上三角形
+            path.moveTo(centerX, centerY - size);           // 顶点
+            path.lineTo(centerX - size, centerY + size);    // 左下角
+            path.lineTo(centerX + size, centerY + size);    // 右下角
         } else {
-            return config.getDownTriangleColor();
+            // 向下三角形
+            path.moveTo(centerX, centerY + size);           // 底点
+            path.lineTo(centerX - size, centerY - size);    // 左上角
+            path.lineTo(centerX + size, centerY - size);    // 右上角
         }
+
+        path.close();
+        return path;
+    }
+
+    @Override
+    public float getMarkerWidth(MarkerData marker) {
+        return marker.getConfig().getMarkerSize() * density;
+    }
+
+    @Override
+    public float getMarkerHeight(MarkerData marker) {
+        return marker.getConfig().getMarkerSize() * density;
+    }
+
+    @Override
+    public boolean supportsShape(MarkerShape shape) {
+        return shape == MarkerShape.TRIANGLE_UP || shape == MarkerShape.TRIANGLE_DOWN;
     }
 } 

@@ -5,12 +5,12 @@ import android.graphics.Canvas;
 import android.graphics.Paint;
 
 import com.alex.klinemarker.core.IMarkerRenderer;
-import com.alex.klinemarker.core.MarkerConfig;
 import com.alex.klinemarker.data.MarkerData;
-import com.alex.klinemarker.data.MarkerStyle;
+import com.alex.klinemarker.data.MarkerShape;
 
 /**
  * 圆点标记渲染器
+ * 绘制简单的圆点标记
  */
 public class DotRenderer implements IMarkerRenderer {
 
@@ -25,33 +25,30 @@ public class DotRenderer implements IMarkerRenderer {
     }
 
     @Override
-    public void drawMarker(Canvas canvas, float centerX, float centerY, MarkerData marker, MarkerConfig config, Context context) {
-        // 获取标准标记大小
-        float markerSize = marker.getSize() > 0 ? marker.getSize() : config.getMarkerSize();
-        float radius = markerSize * density / 2;
+    public void drawMarker(Canvas canvas, float centerX, float centerY, MarkerData marker, Context context) {
+        // 计算圆点半径 - 修复圆点过小问题
+        float radius = marker.getConfig().getMarkerSize() * density / 3f; // 从/4改为/3f，让圆点更大但仍保持小于其他标记
 
         // 设置颜色
-        int color = marker.getColor() != 0 ? marker.getColor() : 0xFF888888; // 默认灰色
-        dotPaint.setColor(color);
+        dotPaint.setColor(marker.getConfig().getBackgroundColor());
+        dotPaint.setAlpha((int) (marker.getConfig().getAlpha() * 255));
 
         // 绘制圆点
         canvas.drawCircle(centerX, centerY, radius, dotPaint);
     }
 
     @Override
-    public float getMarkerWidth(MarkerData marker, MarkerConfig config) {
-        float markerSize = marker.getSize() > 0 ? marker.getSize() : config.getMarkerSize();
-        return markerSize * density; // 统一大小
+    public float getMarkerWidth(MarkerData marker) {
+        return marker.getConfig().getMarkerSize() * density / 1.5f; // 相应调整宽度
     }
 
     @Override
-    public float getMarkerHeight(MarkerData marker, MarkerConfig config) {
-        float markerSize = marker.getSize() > 0 ? marker.getSize() : config.getMarkerSize();
-        return markerSize * density; // 统一大小
+    public float getMarkerHeight(MarkerData marker) {
+        return marker.getConfig().getMarkerSize() * density / 1.5f; // 相应调整高度
     }
 
     @Override
-    public boolean supportsStyle(MarkerStyle style) {
-        return style == MarkerStyle.DOT;
+    public boolean supportsShape(MarkerShape shape) {
+        return shape == MarkerShape.DOT;
     }
 } 

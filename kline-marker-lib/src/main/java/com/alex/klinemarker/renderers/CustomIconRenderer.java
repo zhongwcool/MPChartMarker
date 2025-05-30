@@ -5,13 +5,12 @@ import android.graphics.Canvas;
 import android.graphics.drawable.Drawable;
 
 import com.alex.klinemarker.core.IMarkerRenderer;
-import com.alex.klinemarker.core.MarkerConfig;
 import com.alex.klinemarker.data.MarkerData;
-import com.alex.klinemarker.data.MarkerStyle;
+import com.alex.klinemarker.data.MarkerShape;
 
 /**
  * 自定义图标标记渲染器
- * 支持使用Drawable作为标记图标
+ * 支持绘制自定义Drawable图标
  */
 public class CustomIconRenderer implements IMarkerRenderer {
 
@@ -22,41 +21,43 @@ public class CustomIconRenderer implements IMarkerRenderer {
     }
 
     @Override
-    public void drawMarker(Canvas canvas, float centerX, float centerY, MarkerData marker, MarkerConfig config, Context context) {
-        Drawable icon = marker.getCustomIcon();
+    public void drawMarker(Canvas canvas, float centerX, float centerY, MarkerData marker, Context context) {
+        Drawable icon = marker.getConfig().getCustomIcon();
         if (icon == null) {
-            return; // 没有自定义图标，不绘制
+            return;
         }
 
-        // 获取标准标记大小，所有自定义图标使用统一的标准大小
-        float markerSize = marker.getSize() > 0 ? marker.getSize() : config.getMarkerSize();
-        int iconSize = (int) (markerSize * density); // 使用1.0x标准大小，与圆形、菱形一致
+        // 获取图标大小
+        int size = (int) (marker.getConfig().getMarkerSize() * density);
+        int halfSize = size / 2;
 
-        // 计算图标位置
-        int left = (int) (centerX - iconSize / 2);
-        int top = (int) (centerY - iconSize / 2);
-        int right = left + iconSize;
-        int bottom = top + iconSize;
+        // 设置图标边界
+        icon.setBounds(
+                (int) (centerX - halfSize),
+                (int) (centerY - halfSize),
+                (int) (centerX + halfSize),
+                (int) (centerY + halfSize)
+        );
 
-        // 设置图标边界并绘制
-        icon.setBounds(left, top, right, bottom);
+        // 设置透明度
+        icon.setAlpha((int) (marker.getConfig().getAlpha() * 255));
+
+        // 绘制图标
         icon.draw(canvas);
     }
 
     @Override
-    public float getMarkerWidth(MarkerData marker, MarkerConfig config) {
-        float markerSize = marker.getSize() > 0 ? marker.getSize() : config.getMarkerSize();
-        return markerSize * density; // 与圆形、菱形标记保持一致
+    public float getMarkerWidth(MarkerData marker) {
+        return marker.getConfig().getMarkerSize() * density;
     }
 
     @Override
-    public float getMarkerHeight(MarkerData marker, MarkerConfig config) {
-        float markerSize = marker.getSize() > 0 ? marker.getSize() : config.getMarkerSize();
-        return markerSize * density; // 与圆形、菱形标记保持一致
+    public float getMarkerHeight(MarkerData marker) {
+        return marker.getConfig().getMarkerSize() * density;
     }
 
     @Override
-    public boolean supportsStyle(MarkerStyle style) {
-        return style == MarkerStyle.CUSTOM_ICON;
+    public boolean supportsShape(MarkerShape shape) {
+        return shape == MarkerShape.CUSTOM_ICON;
     }
 } 
