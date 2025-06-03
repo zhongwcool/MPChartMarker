@@ -41,11 +41,6 @@ public enum MarkerShape {
     DOT,
 
     /**
-     * 十字
-     */
-    CROSS,
-
-    /**
      * 箭头（向上）
      */
     ARROW_UP,

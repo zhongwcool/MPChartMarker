@@ -4,25 +4,36 @@ import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Path;
+import android.graphics.Rect;
 
 import com.alex.klinemarker.core.IMarkerRenderer;
 import com.alex.klinemarker.data.MarkerData;
 import com.alex.klinemarker.data.MarkerShape;
+import com.alex.klinemarker.utils.TextUtils;
 
 /**
  * 箭头标记渲染器
- * 支持向上和向下箭头
+ * 支持向上和向下箭头，并支持文字绘制
  */
 public class ArrowRenderer implements IMarkerRenderer {
 
     private final Paint arrowPaint;
+    private final Paint textPaint;
     private final float density;
+    private final Rect textBounds = new Rect();
 
     public ArrowRenderer(float density) {
         this.density = density;
 
         arrowPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         arrowPaint.setStyle(Paint.Style.FILL);
+
+        textPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        textPaint.setTextAlign(Paint.Align.CENTER);
+        textPaint.setTypeface(android.graphics.Typeface.DEFAULT_BOLD);
+        // 优化文字渲染质量，特别适合汉字显示
+        textPaint.setSubpixelText(true);
+        textPaint.setLinearText(true);
     }
 
     @Override
@@ -37,6 +48,21 @@ public class ArrowRenderer implements IMarkerRenderer {
         // 创建箭头路径
         Path arrowPath = createArrowPath(centerX, centerY, size, marker.getConfig().getShape());
         canvas.drawPath(arrowPath, arrowPaint);
+
+        // 绘制文字（如果需要）
+        if (marker.getConfig().isShowText() && marker.getText() != null && !marker.getText().isEmpty()) {
+            // 处理文字：限制长度（除了TEXT ONLY）
+            String originalText = marker.getText();
+            String displayText = TextUtils.processMarkerText(originalText, marker.getConfig().getShape());
+
+            // 设置文字样式
+            textPaint.setTextSize(marker.getConfig().getTextSize() * density);
+            textPaint.setColor(marker.getConfig().getTextColor());
+
+            // 使用改进的文字居中算法，特别优化汉字显示
+            float textY = TextUtils.calculateChineseTextBaselineY(textPaint, displayText, centerY);
+            canvas.drawText(displayText, centerX, textY, textPaint);
+        }
     }
 
     /**

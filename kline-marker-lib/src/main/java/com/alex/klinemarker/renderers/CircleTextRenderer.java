@@ -8,9 +8,11 @@ import android.graphics.Rect;
 import com.alex.klinemarker.core.IMarkerRenderer;
 import com.alex.klinemarker.data.MarkerData;
 import com.alex.klinemarker.data.MarkerShape;
+import com.alex.klinemarker.utils.TextUtils;
 
 /**
  * 圆形背景 + 文字标记渲染器
+ * 使用固定圆形大小，确保中文和英文字符显示一致
  */
 public class CircleTextRenderer implements IMarkerRenderer {
 
@@ -28,29 +30,27 @@ public class CircleTextRenderer implements IMarkerRenderer {
         textPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         textPaint.setTextAlign(Paint.Align.CENTER);
         textPaint.setTypeface(android.graphics.Typeface.DEFAULT_BOLD);
+        // 优化文字渲染质量，特别适合汉字显示
+        textPaint.setSubpixelText(true);
+        textPaint.setLinearText(true);
     }
 
     @Override
     public void drawMarker(Canvas canvas, float centerX, float centerY, MarkerData marker, Context context) {
-        String text = marker.getText();
-        if (text == null || text.isEmpty()) {
-            text = ""; // 空文本也绘制背景
+        // 处理文字：限制长度（除了TEXT ONLY）
+        String originalText = marker.getText();
+        String displayText = TextUtils.processMarkerText(originalText, marker.getConfig().getShape());
+
+        if (displayText == null || displayText.isEmpty()) {
+            displayText = ""; // 空文本也绘制背景
         }
 
         // 设置文字样式
         textPaint.setTextSize(marker.getConfig().getTextSize() * density);
         textPaint.setColor(marker.getConfig().getTextColor());
 
-        // 测量文字尺寸
-        textPaint.getTextBounds(text, 0, text.length(), textBounds);
-        float textWidth = textBounds.width();
-        float textHeight = textBounds.height();
-
-        // 计算圆形背景大小
-        float padding = marker.getConfig().getMarkerSize() * density * 0.3f;
-        float minRadius = marker.getConfig().getMarkerSize() * density / 2;
-        float contentRadius = Math.max(textWidth / 2 + padding, textHeight / 2 + padding);
-        float radius = Math.max(minRadius, contentRadius);
+        // 使用固定的圆形半径，不受文字内容影响
+        float radius = marker.getConfig().getMarkerSize() * density / 2f;
 
         // 绘制圆形背景
         backgroundPaint.setColor(marker.getConfig().getBackgroundColor());
@@ -58,43 +58,23 @@ public class CircleTextRenderer implements IMarkerRenderer {
         canvas.drawCircle(centerX, centerY, radius, backgroundPaint);
 
         // 绘制文字
-        if (marker.getConfig().isShowText() && !text.isEmpty()) {
-            // 计算文字基线位置
-            float textY = centerY + textHeight / 2f;
-            canvas.drawText(text, centerX, textY, textPaint);
+        if (marker.getConfig().isShowText() && !displayText.isEmpty()) {
+            // 使用改进的文字居中算法，特别优化汉字显示
+            float textY = TextUtils.calculateChineseTextBaselineY(textPaint, displayText, centerY);
+            canvas.drawText(displayText, centerX, textY, textPaint);
         }
     }
 
     @Override
     public float getMarkerWidth(MarkerData marker) {
-        if (!marker.getConfig().isShowText() || marker.getText() == null || marker.getText().isEmpty()) {
-            return marker.getConfig().getMarkerSize() * density;
-        }
-
-        textPaint.setTextSize(marker.getConfig().getTextSize() * density);
-        textPaint.getTextBounds(marker.getText(), 0, marker.getText().length(), textBounds);
-
-        float padding = marker.getConfig().getMarkerSize() * density * 0.3f;
-        float minWidth = marker.getConfig().getMarkerSize() * density;
-        float contentWidth = textBounds.width() + padding * 2;
-
-        return Math.max(minWidth, contentWidth);
+        // 返回固定宽度，不受文字内容影响
+        return marker.getConfig().getMarkerSize() * density;
     }
 
     @Override
     public float getMarkerHeight(MarkerData marker) {
-        if (!marker.getConfig().isShowText() || marker.getText() == null || marker.getText().isEmpty()) {
-            return marker.getConfig().getMarkerSize() * density;
-        }
-
-        textPaint.setTextSize(marker.getConfig().getTextSize() * density);
-        textPaint.getTextBounds(marker.getText(), 0, marker.getText().length(), textBounds);
-
-        float padding = marker.getConfig().getMarkerSize() * density * 0.3f;
-        float minHeight = marker.getConfig().getMarkerSize() * density;
-        float contentHeight = textBounds.height() + padding * 2;
-
-        return Math.max(minHeight, contentHeight);
+        // 返回固定高度，不受文字内容影响
+        return marker.getConfig().getMarkerSize() * density;
     }
 
     @Override

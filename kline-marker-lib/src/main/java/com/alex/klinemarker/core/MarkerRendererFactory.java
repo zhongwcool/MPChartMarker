@@ -5,7 +5,6 @@ import android.content.Context;
 import com.alex.klinemarker.data.MarkerShape;
 import com.alex.klinemarker.renderers.ArrowRenderer;
 import com.alex.klinemarker.renderers.CircleTextRenderer;
-import com.alex.klinemarker.renderers.CrossRenderer;
 import com.alex.klinemarker.renderers.CustomIconRenderer;
 import com.alex.klinemarker.renderers.DiamondTextRenderer;
 import com.alex.klinemarker.renderers.DotRenderer;
@@ -58,7 +57,6 @@ public class MarkerRendererFactory {
         // 几何图形渲染器
         renderers.put(MarkerShape.STAR, new StarRenderer(density));
         renderers.put(MarkerShape.DOT, new DotRenderer(density));
-        renderers.put(MarkerShape.CROSS, new CrossRenderer(density));
 
         // 箭头渲染器（共用一个渲染器）
         ArrowRenderer arrowRenderer = new ArrowRenderer(density);

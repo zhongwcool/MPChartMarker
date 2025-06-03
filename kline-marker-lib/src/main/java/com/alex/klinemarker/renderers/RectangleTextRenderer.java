@@ -3,25 +3,29 @@ package com.alex.klinemarker.renderers;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Paint;
-import android.graphics.Rect;
 import android.graphics.RectF;
 
 import com.alex.klinemarker.core.IMarkerRenderer;
 import com.alex.klinemarker.data.MarkerData;
 import com.alex.klinemarker.data.MarkerShape;
+import com.alex.klinemarker.utils.TextUtils;
 
 /**
  * 矩形背景 + 文字标记渲染器
+ * 直角正方形大小固定为16dp，不支持调整
  */
 public class RectangleTextRenderer implements IMarkerRenderer {
 
+    private static final float FIXED_SQUARE_SIZE_DP = 12f; // 固定直角正方形大小为12dp
+    
     private final Paint backgroundPaint;
     private final Paint textPaint;
     private final float density;
-    private final Rect textBounds = new Rect();
+    private final float fixedSquareSize; // 固定的正方形尺寸
 
     public RectangleTextRenderer(float density) {
         this.density = density;
+        this.fixedSquareSize = FIXED_SQUARE_SIZE_DP * density; // 固定尺寸
 
         backgroundPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         backgroundPaint.setStyle(Paint.Style.FILL);
@@ -29,81 +33,59 @@ public class RectangleTextRenderer implements IMarkerRenderer {
         textPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         textPaint.setTextAlign(Paint.Align.CENTER);
         textPaint.setTypeface(android.graphics.Typeface.DEFAULT_BOLD);
+        // 优化文字渲染质量，特别适合汉字显示
+        textPaint.setSubpixelText(true);
+        textPaint.setLinearText(true);
     }
 
     @Override
     public void drawMarker(Canvas canvas, float centerX, float centerY, MarkerData marker, Context context) {
-        String text = marker.getText();
-        if (text == null || text.isEmpty()) {
-            text = "";
+        // 处理文字：限制长度（除了TEXT ONLY）
+        String originalText = marker.getText();
+        String displayText = TextUtils.processMarkerText(originalText, marker.getConfig().getShape());
+
+        if (displayText == null || displayText.isEmpty()) {
+            displayText = "";
         }
 
         // 设置文字样式
         textPaint.setTextSize(marker.getConfig().getTextSize() * density);
         textPaint.setColor(marker.getConfig().getTextColor());
 
-        // 测量文字尺寸
-        textPaint.getTextBounds(text, 0, text.length(), textBounds);
-        float textWidth = textBounds.width();
-        float textHeight = textBounds.height();
+        // 使用固定的正方形尺寸，不受markerSize影响
+        float halfSize = fixedSquareSize / 2;
 
-        // 计算矩形大小 - 修复矩形为正方形
-        float padding = marker.getConfig().getMarkerSize() * density * 0.3f;
-        float minSize = marker.getConfig().getMarkerSize() * density; // 统一最小尺寸
-
-        float rectWidth = Math.max(minSize, textWidth + padding * 2);
-        float rectHeight = Math.max(minSize, textHeight + padding); // 改为统一的minSize，确保是正方形
-
-        // 计算矩形位置
+        // 计算固定正方形位置
         RectF rect = new RectF(
-                centerX - rectWidth / 2,
-                centerY - rectHeight / 2,
-                centerX + rectWidth / 2,
-                centerY + rectHeight / 2
+                centerX - halfSize,
+                centerY - halfSize,
+                centerX + halfSize,
+                centerY + halfSize
         );
 
-        // 绘制矩形背景
+        // 绘制直角矩形背景（移除圆角）
         backgroundPaint.setColor(marker.getConfig().getBackgroundColor());
         backgroundPaint.setAlpha((int) (marker.getConfig().getAlpha() * 255));
-        canvas.drawRoundRect(rect, 4 * density, 4 * density, backgroundPaint);
+        canvas.drawRect(rect, backgroundPaint);
 
         // 绘制文字
-        if (marker.getConfig().isShowText() && !text.isEmpty()) {
-            float textY = centerY + textHeight / 2f;
-            canvas.drawText(text, centerX, textY, textPaint);
+        if (marker.getConfig().isShowText() && !displayText.isEmpty()) {
+            // 使用改进的文字居中算法，特别优化汉字显示
+            float textY = TextUtils.calculateChineseTextBaselineY(textPaint, displayText, centerY);
+            canvas.drawText(displayText, centerX, textY, textPaint);
         }
     }
 
     @Override
     public float getMarkerWidth(MarkerData marker) {
-        if (!marker.getConfig().isShowText() || marker.getText() == null || marker.getText().isEmpty()) {
-            return marker.getConfig().getMarkerSize() * density;
-        }
-
-        textPaint.setTextSize(marker.getConfig().getTextSize() * density);
-        textPaint.getTextBounds(marker.getText(), 0, marker.getText().length(), textBounds);
-
-        float padding = marker.getConfig().getMarkerSize() * density * 0.3f;
-        float minWidth = marker.getConfig().getMarkerSize() * density;
-        float contentWidth = textBounds.width() + padding * 2;
-
-        return Math.max(minWidth, contentWidth);
+        // 返回固定宽度，不受markerSize影响
+        return fixedSquareSize;
     }
 
     @Override
     public float getMarkerHeight(MarkerData marker) {
-        if (!marker.getConfig().isShowText() || marker.getText() == null || marker.getText().isEmpty()) {
-            return marker.getConfig().getMarkerSize() * density; // 改为统一尺寸，确保正方形
-        }
-
-        textPaint.setTextSize(marker.getConfig().getTextSize() * density);
-        textPaint.getTextBounds(marker.getText(), 0, marker.getText().length(), textBounds);
-
-        float padding = marker.getConfig().getMarkerSize() * density * 0.3f;
-        float minSize = marker.getConfig().getMarkerSize() * density; // 改为统一的最小尺寸
-        float contentHeight = textBounds.height() + padding;
-
-        return Math.max(minSize, contentHeight); // 使用统一的最小尺寸
+        // 返回固定高度，不受markerSize影响
+        return fixedSquareSize;
     }
 
     @Override

@@ -33,6 +33,9 @@ MPChartMarker/
 - 🏗️ **易于使用**：Builder模式，链式调用，集成简单
 - 📈 **JSON支持**：支持JSON格式的趋势区间数据导入
 - 🎭 **平滑效果**：支持贝塞尔曲线和渐变效果
+- 🔄 **大小一致性**：圆形标记大小统一，不受文字内容影响
+- 🌏 **多语言优化**：特别优化汉字居中显示，支持中英文混合
+- 🎨 **颜色预设系统**：统一的颜色预设，避免杂乱的颜色使用
 
 ## 快速开始
 
@@ -167,14 +170,66 @@ TrendRegionConfig trendConfig = new TrendRegionConfig.Builder()
 ### 📖 完整使用指南
 
 - [K线标记库使用指南](kline-marker-lib/docs/K线标记库使用指南.md) - 完整的集成、配置和使用文档
+- [颜色预设系统使用指南](kline-marker-lib/docs/颜色预设系统使用指南.md) - 新的统一颜色预设系统
 
 ### 🔧 深度解析
 
-- [功能特性详解](kline-marker-lib/docs/功能特性详解.md) - 技术实现细节、算法原理和高级定制
+- [架构设计文档](kline-marker-lib/docs/架构设计文档.md) - 深入了解库的设计思路和实现原理
+- [性能优化指南](kline-marker-lib/docs/性能优化指南.md) - 大数据量下的性能优化策略
+- [自定义渲染器开发指南](kline-marker-lib/docs/自定义渲染器开发指南.md) - 开发自定义标记渲染器
 
-### 📦 库文档
+## 🎨 颜色预设系统
 
-- [库 README](kline-marker-lib/README.md) - 库的独立说明文档
+为了避免杂乱的颜色使用，我们引入了统一的颜色预设系统：
+
+### 谷歌Logo四色
+- **谷歌蓝** (`0xFF4285F4`) - 信息、提示类标记
+- **谷歌红** (`0xFFEA4335`) - 警告、错误、卖出类标记  
+- **谷歌绿** (`0xFF34A853`) - 成功、买入类标记
+- **谷歌黄** (`0xFFFBBC04`) - 重要、关注类标记
+
+### 股票经典色彩
+- **股票红** (`0xFFFF4444`) - 中国股市下跌色
+- **股票绿** (`0xFF00AA00`) - 中国股市上涨色
+
+### 经典紫色
+- **菱形紫** (`0xFF9C27B0`) - 经典的菱形标记紫色
+
+### 使用示例
+
+```java
+// 使用预设标记（自动应用颜色预设）
+MarkerData.createBuyMarker(date, "B");        // 谷歌绿色
+MarkerData.createSellMarker(date, "S");       // 谷歌红色
+MarkerData.createInfoMarker(date, "i");       // 谷歌蓝色
+MarkerData.createImportantMarker(date, "★");  // 谷歌黄色
+
+// 圆形标记大小一致性演示 - 不同字符相同大小
+MarkerData chinese = MarkerData.createCustomMarker(date, "买", MarkerPresets.googleBlue());   // 中文字符，16dp圆形
+MarkerData english = MarkerData.createCustomMarker(date, "B", MarkerPresets.googleGreen());   // 英文字符，16dp圆形
+MarkerData number = MarkerData.createCustomMarker(date, "1", MarkerPresets.googleRed());      // 数字字符，16dp圆形
+MarkerData symbol = MarkerData.createCustomMarker(date, "★", MarkerPresets.googleYellow());   // 符号字符，16dp圆形
+// 以上所有圆形标记都是完全相同的大小，由markerSize统一控制（默认16dp）
+
+// 直接使用颜色预设
+MarkerData.createCustomMarker(date, "蓝", MarkerPresets.googleBlue());
+MarkerData.createCustomMarker(date, "涨", MarkerPresets.stockGreen());
+MarkerData.createCustomMarker(date, "紫", MarkerPresets.diamondPurple());
+
+// 基于预设进行自定义
+MarkerData.createCustomMarker(date, "自定义",
+    MarkerPresets.customize(MarkerPresets.googleBlue())
+        .shape(MarkerShape.STAR)
+        .markerSize(14f)
+        .build());
+
+// 使用颜色常量
+new MarkerConfig.Builder()
+    .backgroundColor(MarkerColors.GOOGLE_BLUE)
+    .textColor(MarkerColors.BuyColors.TEXT)
+    .lineColor(MarkerColors.getDarkerVariant(MarkerColors.GOOGLE_BLUE))
+    .build();
+```
 
 ## 示例应用
 

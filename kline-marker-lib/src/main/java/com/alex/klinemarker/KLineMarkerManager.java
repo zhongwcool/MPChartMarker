@@ -4,10 +4,10 @@ import android.content.Context;
 import android.graphics.Canvas;
 
 import com.alex.klinemarker.core.KLineMarkerRenderer;
-import com.alex.klinemarker.core.MarkerConfig;
 import com.alex.klinemarker.core.TrendRegionConfig;
 import com.alex.klinemarker.core.TrendRegionRenderer;
 import com.alex.klinemarker.data.KLineDataAdapter;
+import com.alex.klinemarker.data.MarkerConfig;
 import com.alex.klinemarker.data.MarkerData;
 import com.alex.klinemarker.data.TrendRegion;
 import com.alex.klinemarker.utils.TrendRegionParser;

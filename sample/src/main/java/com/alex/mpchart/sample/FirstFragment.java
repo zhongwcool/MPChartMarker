@@ -13,9 +13,10 @@ import androidx.fragment.app.Fragment;
 import androidx.navigation.fragment.NavHostFragment;
 
 import com.alex.klinemarker.KLineMarkerManager;
-import com.alex.klinemarker.core.MarkerConfig;
 import com.alex.klinemarker.core.TrendRegionConfig;
 import com.alex.klinemarker.data.LineLength;
+import com.alex.klinemarker.data.MarkerColors;
+import com.alex.klinemarker.data.MarkerConfig;
 import com.alex.klinemarker.data.MarkerData;
 import com.alex.klinemarker.data.MarkerPosition;
 import com.alex.klinemarker.data.MarkerPresets;
@@ -155,18 +156,15 @@ public class FirstFragment extends Fragment {
         // 创建数据适配器
         KLineDataAdapterImpl adapter = new KLineDataAdapterImpl();
 
-        // 创建标记配置 - 调整尺寸
+        // 创建标记配置 - 使用新的data包MarkerConfig
         MarkerConfig markerConfig = new MarkerConfig.Builder()
-                .markerSize(12f) // 调整标记大小 (从8f改为12f)
-                .textSize(8f) // 相应调整文字大小 (从7f改为8f)
-                .padding(2f) // 保持内边距
-                .buyColor(Color.parseColor("#00AA00"))
-                .sellColor(Color.parseColor("#FF4444"))
-                .numberColor(Color.parseColor("#2196F3")) 
-                .upTriangleColor(Color.parseColor("#FF6600"))
-                .downTriangleColor(Color.parseColor("#9C27B0"))
+                .markerSize(12f) // 调整标记大小
+                .textSize(8f) // 相应调整文字大小
+                .backgroundColor(Color.parseColor("#00AA00"))
                 .textColor(Color.WHITE)
-                .numberTextColor(Color.BLACK) 
+                .lineColor(Color.parseColor("#00AA00"))
+                .showText(true)
+                .showLine(true)
                 .build();
 
         // 创建趋势区间配置
@@ -390,82 +388,209 @@ public class FirstFragment extends Fragment {
                 return;
             }
 
-            // ========== 预定义标记样式 ==========
-            // 将标记集中在数据的后半部分（最新数据/最右侧）
+            // ========== 演示圆形标记大小一致性 ==========
+            // 以下圆形标记虽然内容不同（中文、英文、数字），但大小完全一致
 
-            // 1. 买入标记 - 恢复使用预设配置
-            markers.add(MarkerData.createBuyMarker(
-                    klineDataList.get(dataSize - 45).getDate(),  // 倒数第45个
-                    "B"  // 单个字母
-            ));
-
-            // 2. 卖出标记
-            markers.add(MarkerData.createSellMarker(
-                    klineDataList.get(dataSize - 35).getDate(),  // 倒数第35个
-                    "S"  // 单个字母
-            ));
-
-            // 3. 事件标记
-            markers.add(MarkerData.createEventMarker(
-                    klineDataList.get(dataSize - 40).getDate(),  // 倒数第40个
-                    "E"  // 单个字母
-            ));
-
-            // 4. 警告标记
-            markers.add(MarkerData.createWarningMarker(
-                    klineDataList.get(dataSize - 30).getDate(),  // 倒数第30个
-                    "!"  // 符号
-            ));
-
-            // 5. 信息标记
-            markers.add(MarkerData.createInfoMarker(
-                    klineDataList.get(dataSize - 25).getDate(),  // 倒数第25个
-                    "i"  // 单个字母
-            ));
-
-            // 6. 止损标记
-            markers.add(MarkerData.createStopLossMarker(
-                    klineDataList.get(dataSize - 10).getDate(),  // 倒数第10个
-                    "L"  // 单个字母
-            ));
-
-            // 7. 止盈标记
-            markers.add(MarkerData.createTakeProfitMarker(
-                    klineDataList.get(dataSize - 5).getDate(),   // 倒数第5个
-                    "P"  // 单个字母
-            ));
-
-            // 8. 纯文字标记 - 支持多个汉字
-            markers.add(MarkerData.createTextMarker(
-                    klineDataList.get(dataSize - 38).getDate(),  // 倒数第38个
-                    "重要消息"  // 多个汉字演示
-            ));
-
-            // 9. 圆点标记 - 改为自定义配置，统一尺寸
-            markers.add(new MarkerData(
-                    klineDataList.get(dataSize - 28).getDate(), // 倒数第28个
-                    "",
-                    new com.alex.klinemarker.data.MarkerConfig.Builder()
-                            .shape(MarkerShape.DOT)
-                            .position(MarkerPosition.AUTO)
-                            .backgroundColor(0xFF2196F3) // 改为鲜明的蓝色，更易辨识
-                            .showText(false)
+            // 17. 圆形 - 中文字符
+            markers.add(MarkerData.createCustomMarker(
+                    klineDataList.get(dataSize - 50).getDate(),
+                    "买", // 中文字符，圆形大小固定
+                    new MarkerConfig.Builder()
+                            .shape(MarkerShape.CIRCLE)
+                            .backgroundColor(MarkerColors.GOOGLE_BLUE)
+                            .textColor(0xFFFFFFFF)
+                            .showText(true)
                             .showLine(true)
-                            .lineColor(0xFF1976D2)
-                            .lineLength(LineLength.SHORT)
-                            .markerSize(12f) // 统一尺寸为12f，与菱形标记一致
+                            .markerSize(16f) // 统一16dp
+                            .textSize(10f)   // 统一10f
                             .build()
             ));
 
-            // ========== 多汉字纯文字标记演示 ==========
+            // 18. 圆形 - 英文字符（相同大小）
+            markers.add(MarkerData.createCustomMarker(
+                    klineDataList.get(dataSize - 49).getDate(),
+                    "A", // 英文字符，圆形大小与中文一致
+                    new MarkerConfig.Builder()
+                            .shape(MarkerShape.CIRCLE)
+                            .backgroundColor(MarkerColors.GOOGLE_GREEN)
+                            .textColor(0xFFFFFFFF)
+                            .showText(true)
+                            .showLine(true)
+                            .markerSize(16f) // 统一16dp
+                            .textSize(10f)   // 统一10f
+                            .build()
+            ));
 
-            // 添加更多多汉字文字标记示例
+            // 19. 圆形 - 数字字符（相同大小）
+            markers.add(MarkerData.createCustomMarker(
+                    klineDataList.get(dataSize - 47).getDate(),
+                    "1", // 数字字符，圆形大小与中文英文一致
+                    new MarkerConfig.Builder()
+                            .shape(MarkerShape.CIRCLE)
+                            .backgroundColor(MarkerColors.GOOGLE_RED)
+                            .textColor(0xFFFFFFFF)
+                            .showText(true)
+                            .showLine(true)
+                            .markerSize(16f) // 统一16dp
+                            .textSize(10f)   // 统一10f
+                            .build()
+            ));
+
+            // 20. 圆形 - 符号字符（相同大小）
+            markers.add(MarkerData.createCustomMarker(
+                    klineDataList.get(dataSize - 46).getDate(),
+                    "★", // 符号字符，圆形大小一致
+                    new MarkerConfig.Builder()
+                            .shape(MarkerShape.CIRCLE)
+                            .backgroundColor(MarkerColors.GOOGLE_YELLOW)
+                            .textColor(0xFF000000)
+                            .showText(true)
+                            .showLine(true)
+                            .markerSize(16f) // 统一16dp
+                            .textSize(10f)   // 统一10f
+                            .build()
+            ));
+
+            // ========== 演示中文字符支持限制 ==========
+            // 只有圆形和菱形支持中文字符显示，其他形状遇到中文会不显示文字
+
+            // 1. 圆形标记 - 支持中文
+            markers.add(MarkerData.createCustomMarker(
+                    klineDataList.get(dataSize - 45).getDate(),  // 倒数第45个
+                    "买入", // 中文字符，圆形支持，会显示"买"
+                    MarkerPresets.googleBlue()  // 使用预设，自动16dp
+            ));
+
+            // 2. 菱形标记 - 支持中文
+            markers.add(MarkerData.createCustomMarker(
+                    klineDataList.get(dataSize - 40).getDate(),  // 倒数第40个
+                    "卖出", // 中文字符，菱形支持，会显示"卖"
+                    MarkerPresets.diamondPurple()  // 使用预设，自动16dp
+            ));
+
+            // 3. 矩形标记 - 不支持中文（文字被隐藏）
+            markers.add(MarkerData.createCustomMarker(
+                    klineDataList.get(dataSize - 35).getDate(),  // 倒数第35个
+                    "警告", // 中文字符，矩形不支持，不显示文字
+                    new MarkerConfig.Builder()
+                            .shape(MarkerShape.RECTANGLE)
+                            .backgroundColor(MarkerColors.GOOGLE_RED)
+                            .textColor(0xFFFFFFFF)
+                            .showText(true)
+                            .showLine(true)
+                            .markerSize(16f) // 统一16dp（虽然矩形是固定大小）
+                            .textSize(10f)   // 统一10f
+                            .build()
+            ));
+
+            // 4. 三角形标记 - 不支持任何文字（纯图标）
+            markers.add(MarkerData.createCustomMarker(
+                    klineDataList.get(dataSize - 30).getDate(),  // 倒数第30个
+                    "止损", // 任何文字都不会显示，纯三角形图标
+                    new MarkerConfig.Builder()
+                            .shape(MarkerShape.TRIANGLE_UP)
+                            .backgroundColor(MarkerColors.GOOGLE_GREEN)
+                            .showText(true) // 即使设置为true也不会显示文字
+                            .showLine(true)
+                            .markerSize(16f) // 统一16dp
+                            .textSize(10f)   // 统一10f
+                            .build()
+            ));
+
+            // 5. 星形标记 - 不支持任何文字（纯图标）
+            markers.add(MarkerData.createCustomMarker(
+                    klineDataList.get(dataSize - 25).getDate(),  // 倒数第25个
+                    "重要", // 任何文字都不会显示，纯星形图标
+                    new MarkerConfig.Builder()
+                            .shape(MarkerShape.STAR)
+                            .backgroundColor(MarkerColors.GOOGLE_YELLOW)
+                            .showText(true) // 即使设置为true也不会显示文字
+                            .showLine(true)
+                            .markerSize(16f) // 统一16dp
+                            .textSize(10f)   // 统一10f
+                            .build()
+            ));
+
+            // ========== 演示英文字符在所有形状中都正常显示 ==========
+
+            // 6. 圆形 - 英文字符正常显示
+            markers.add(MarkerData.createCustomMarker(
+                    klineDataList.get(dataSize - 42).getDate(),  // 倒数第42个
+                    "BUY",  // 英文字符，会显示"B"
+                    MarkerPresets.googleBlue()  // 使用预设，自动16dp
+            ));
+
+            // 7. 矩形 - 英文字符正常显示
+            markers.add(MarkerData.createCustomMarker(
+                    klineDataList.get(dataSize - 37).getDate(),  // 倒数第37个
+                    "SELL", // 英文字符，会显示"S"
+                    new MarkerConfig.Builder()
+                            .shape(MarkerShape.RECTANGLE)
+                            .backgroundColor(MarkerColors.GOOGLE_RED)
+                            .textColor(0xFFFFFFFF)
+                            .showText(true)
+                            .showLine(true)
+                            .markerSize(16f) // 统一16dp（虽然矩形是固定大小）
+                            .textSize(10f)   // 统一10f
+                            .build()
+            ));
+
+            // 8. 三角形 - 英文字符正常显示
+            markers.add(MarkerData.createCustomMarker(
+                    klineDataList.get(dataSize - 32).getDate(),  // 倒数第32个
+                    "UP",   // 英文字符，会显示"U"
+                    new MarkerConfig.Builder()
+                            .shape(MarkerShape.TRIANGLE_UP)
+                            .backgroundColor(MarkerColors.GOOGLE_GREEN)
+                            .textColor(0xFFFFFFFF)
+                            .showText(true)
+                            .showLine(true)
+                            .markerSize(16f) // 统一16dp
+                            .textSize(10f)   // 统一10f
+                            .build()
+            ));
+
+            // 9. 星形 - 英文字符正常显示
+            markers.add(MarkerData.createCustomMarker(
+                    klineDataList.get(dataSize - 27).getDate(),  // 倒数第27个
+                    "STAR", // 英文字符，会显示"S"
+                    new MarkerConfig.Builder()
+                            .shape(MarkerShape.STAR)
+                            .backgroundColor(MarkerColors.GOOGLE_YELLOW)
+                            .textColor(0xFF000000)
+                            .showText(true)
+                            .showLine(true)
+                            .markerSize(16f) // 统一16dp
+                            .textSize(10f)   // 统一10f
+                            .build()
+            ));
+
+            // ========== 演示数字和符号在所有形状中都正常显示 ==========
+
+            // 10. 圆形 - 数字
+            markers.add(MarkerData.createCustomMarker(
+                    klineDataList.get(dataSize - 20).getDate(),
+                    "123",  // 数字，会显示"1"
+                    MarkerPresets.fromColorIndex(0, MarkerShape.CIRCLE)  // 使用预设，自动16dp
+            ));
+
+            // 11. 矩形 - 符号
+            markers.add(MarkerData.createCustomMarker(
+                    klineDataList.get(dataSize - 15).getDate(),
+                    "★☆",  // 符号，会显示"★"
+                    MarkerPresets.fromColorIndex(1, MarkerShape.RECTANGLE)  // 使用预设，自动16dp
+            ));
+
+            // ========== TEXT ONLY 演示（不受中文限制影响）==========
+
+            // 12-14. 纯文字标记 - 支持所有字符，包括中文多字符
             markers.add(new MarkerData(
                     klineDataList.get(dataSize - 43).getDate(),  // 倒数第43个
-                    "业绩公告",
-                    new com.alex.klinemarker.data.MarkerConfig.Builder()
+                    "中文业绩公告",  // TEXT ONLY 不限制中文
+                    new MarkerConfig.Builder()
                             .shape(MarkerShape.NONE)
-                            .textColor(0xFF1976D2)
+                            .textColor(MarkerColors.GOOGLE_BLUE)
+                            .lineColor(MarkerColors.getDarkerVariant(MarkerColors.GOOGLE_BLUE))
                             .textSize(10f)
                             .showText(true)
                             .showLine(true)
@@ -475,10 +600,11 @@ public class FirstFragment extends Fragment {
 
             markers.add(new MarkerData(
                     klineDataList.get(dataSize - 14).getDate(),  // 倒数第14个
-                    "分红除权",
-                    new com.alex.klinemarker.data.MarkerConfig.Builder()
+                    "主力资金流入",  // TEXT ONLY 不限制中文
+                    new MarkerConfig.Builder()
                             .shape(MarkerShape.NONE)
-                            .textColor(0xFF388E3C)
+                            .textColor(MarkerColors.GOOGLE_GREEN)
+                            .lineColor(MarkerColors.getDarkerVariant(MarkerColors.GOOGLE_GREEN))
                             .textSize(10f)
                             .showText(true)
                             .showLine(true)
@@ -488,10 +614,11 @@ public class FirstFragment extends Fragment {
 
             markers.add(new MarkerData(
                     klineDataList.get(dataSize - 6).getDate(),   // 倒数第6个
-                    "主力资金流入",
-                    new com.alex.klinemarker.data.MarkerConfig.Builder()
+                    "English Mixed 中英混合",  // TEXT ONLY 支持中英混合
+                    new MarkerConfig.Builder()
                             .shape(MarkerShape.NONE)
-                            .textColor(0xFFD32F2F)
+                            .textColor(MarkerColors.GOOGLE_RED)
+                            .lineColor(MarkerColors.getDarkerVariant(MarkerColors.GOOGLE_RED))
                             .textSize(10f)
                             .showText(true)
                             .showLine(true)
@@ -499,153 +626,45 @@ public class FirstFragment extends Fragment {
                             .build()
             ));
 
-            // ========== 自定义标记样式 ==========
+            // ========== 演示混合文字的处理 ==========
 
-            // 10. 五角星标记 - 改为更鲜明的颜色和统一尺寸
-            markers.add(new MarkerData(
-                    klineDataList.get(dataSize - 32).getDate(),  // 倒数第32个
-                    "",
-                    new com.alex.klinemarker.data.MarkerConfig.Builder()
-                            .shape(MarkerShape.STAR)
-                            .backgroundColor(0xFFFF6600) // 改为鲜明的橙色，更易辨识
-                            .markerSize(12f) // 统一尺寸为12f，与菱形标记一致
-                            .showText(false)
-                            .lineLength(LineLength.MEDIUM)
-                            .build()
+            // 15. 圆形 - 中英混合（支持中文）
+            markers.add(MarkerData.createCustomMarker(
+                    klineDataList.get(dataSize - 48).getDate(),
+                    "A买", // 中英混合，圆形支持中文，会显示"A"
+                    MarkerPresets.googleBlue()
             ));
 
-            // 11. 十字标记
-            markers.add(new MarkerData(
-                    klineDataList.get(dataSize - 22).getDate(),  // 倒数第22个
-                    "",
-                    new com.alex.klinemarker.data.MarkerConfig.Builder()
-                            .shape(MarkerShape.CROSS)
-                            .backgroundColor(0xFF607D8B)
-                            .markerSize(12f) // 调整尺寸 (从8f改为12f)
-                            .showText(false)
-                            .lineLength(LineLength.MEDIUM)
-                            .build()
-            ));
-
-            // 12. 箭头向上 - 统一尺寸
-            markers.add(new MarkerData(
-                    klineDataList.get(dataSize - 18).getDate(),  // 倒数第18个
-                    "",
-                    new com.alex.klinemarker.data.MarkerConfig.Builder()
-                            .shape(MarkerShape.ARROW_UP)
-                            .backgroundColor(0xFF00C853) // 改为更鲜明的绿色
-                            .markerSize(12f) // 统一尺寸为12f，与菱形标记一致
-                            .showText(false)
-                            .lineLength(LineLength.SHORT)
-                            .build()
-            ));
-
-            // 13. 箭头向下 - 统一尺寸
-            markers.add(new MarkerData(
-                    klineDataList.get(dataSize - 12).getDate(),  // 倒数第12个
-                    "",
-                    new com.alex.klinemarker.data.MarkerConfig.Builder()
-                            .shape(MarkerShape.ARROW_DOWN)
-                            .backgroundColor(0xFFFF1744) // 改为更鲜明的红色
-                            .markerSize(12f) // 统一尺寸为12f，与菱形标记一致
-                            .showText(false)
-                            .lineLength(LineLength.SHORT)
-                            .build()
-            ));
-
-            // 14. 菱形标记
-            markers.add(new MarkerData(
-                    klineDataList.get(dataSize - 20).getDate(),  // 倒数第20个
-                    "D",  // 单个字母
-                    new com.alex.klinemarker.data.MarkerConfig.Builder()
-                            .shape(MarkerShape.DIAMOND)
-                            .backgroundColor(0xFF9C27B0)
-                            .textColor(0xFFFFFFFF)
-                            .markerSize(12f) // 调整尺寸 (从8f改为12f)
-                            .textSize(8f) // 调整文字尺寸 (从6f改为8f)
-                            .lineLength(LineLength.SHORT)
-                            .build()
-            ));
-
-            // 15. 三角形向上 - 改为更鲜明的颜色
-            markers.add(new MarkerData(
-                    klineDataList.get(dataSize - 15).getDate(),  // 倒数第15个
-                    "",
-                    new com.alex.klinemarker.data.MarkerConfig.Builder()
-                            .shape(MarkerShape.TRIANGLE_UP)
-                            .backgroundColor(0xFF4CAF50) // 改为更鲜明的绿色，更易辨识
-                            .markerSize(12f) // 调整尺寸 (从8f改为12f)
-                            .showText(false)
-                            .lineLength(LineLength.NONE)
-                            .build()
-            ));
-
-            // 16. 三角形向下 - 改为更鲜明的颜色
-            markers.add(new MarkerData(
-                    klineDataList.get(dataSize - 8).getDate(),   // 倒数第8个
-                    "",
-                    new com.alex.klinemarker.data.MarkerConfig.Builder()
-                            .shape(MarkerShape.TRIANGLE_DOWN)
-                            .backgroundColor(0xFFE53935) // 改为更鲜明的红色，更易辨识
-                            .markerSize(12f) // 调整尺寸 (从8f改为12f)
-                            .showText(false)
-                            .lineLength(LineLength.NONE)
-                            .build()
-            ));
-
-            // ========== 不同线条长度演示 ==========
-
-            // 17. 无虚线示例
-            markers.add(new MarkerData(
-                    klineDataList.get(dataSize - 2).getDate(),  // 倒数第2个
-                    "N",  // 单个字母
-                    new com.alex.klinemarker.data.MarkerConfig.Builder()
+            // 16. 矩形 - 中英混合（不支持中文，文字被隐藏）
+            markers.add(MarkerData.createCustomMarker(
+                    klineDataList.get(dataSize - 18).getDate(),
+                    "B卖", // 中英混合，矩形不支持中文，不显示文字
+                    new MarkerConfig.Builder()
                             .shape(MarkerShape.RECTANGLE)
-                            .backgroundColor(0xFF4CAF50)
+                            .backgroundColor(MarkerColors.STOCK_RED)
                             .textColor(0xFFFFFFFF)
-                            .markerSize(12f) // 调整尺寸 (从8f改为12f)
-                            .textSize(8f) // 调整文字尺寸 (从6f改为8f)
-                            .showLine(false)
+                            .showText(true)
+                            .showLine(true)
+                            .markerSize(12f)
+                            .textSize(8f)
                             .build()
             ));
 
-            // 18. 超长虚线示例
+            // ========== 保留原有标记以向后兼容 ==========
+
+            // 26. 圆点标记 - 无文字
             markers.add(new MarkerData(
-                    klineDataList.get(dataSize - 47).getDate(),  // 倒数第47个
-                    "X",  // 单个字母
-                    new com.alex.klinemarker.data.MarkerConfig.Builder()
-                            .shape(MarkerShape.CIRCLE)
-                            .backgroundColor(0xFF2196F3)
-                            .textColor(0xFFFFFFFF)
-                            .markerSize(12f) // 调整尺寸 (从8f改为12f)
-                            .textSize(8f) // 调整文字尺寸 (从6f改为8f)
-                            .lineLength(LineLength.EXTRA_LONG)
-                            .build()
-            ));
-
-            // ========== 基于预设的自定义 ==========
-
-            // 19. 自定义买入标记
-            markers.add(MarkerData.createCustomMarker(
-                    klineDataList.get(dataSize - 8).getDate(),  // 倒数第8个
-                    "C",  // 单个字母
-                    MarkerPresets.customize(MarkerPresets.buy())
-                            .backgroundColor(0xFF00E676)
-                            .markerSize(12f) // 调整尺寸 (从8f改为12f)
-                            .textSize(8f) // 调整文字尺寸 (从6f改为8f)
-                            .build()
-            ));
-
-            // 20. 自定义警告标记
-            markers.add(MarkerData.createCustomMarker(
-                    klineDataList.get(dataSize - 48).getDate(),  // 倒数第48个
-                    "W",  // 单个字母
-                    MarkerPresets.customize(MarkerPresets.warning())
-                            .position(MarkerPosition.BELOW)
-                            .dashedLine(false)
-                            .lineLength(LineLength.LONG)
-                            .markerSize(12f) // 调整尺寸 (从8f改为12f)
-                            .textSize(8f) // 调整文字尺寸 (从6f改为8f)
+                    klineDataList.get(dataSize - 28).getDate(), // 倒数第28个
+                    "",
+                    new MarkerConfig.Builder()
+                            .shape(MarkerShape.DOT)
+                            .position(MarkerPosition.AUTO)
+                            .backgroundColor(0xFF666666) // 中性灰色
+                            .showText(false)
+                            .showLine(true)
+                            .lineColor(0xFF999999)
+                            .lineLength(LineLength.SHORT)
+                            .markerSize(12f)
                             .build()
             ));
         }
@@ -653,7 +672,13 @@ public class FirstFragment extends Fragment {
         markerManager.setMarkers(markers);
         markerManager.refresh();
 
-        Toast.makeText(getContext(), "已添加所有类型标记演示（共" + markers.size() + "个）", Toast.LENGTH_LONG).show();
+        Toast.makeText(getContext(), "已添加标记功能演示（共" + markers.size() + "个标记）\n" +
+                "演示内容：\n" +
+                "• 所有标记统一16dp大小：确保\"买\"、\"A\"、\"1\"等标记完全一致\n" +
+                "• 中文字符限制：只有圆形和菱形支持中文\n" +
+                "• 矩形：支持文字，固定16dp直角正方形\n" +
+                "• 三角形和星形：不支持文字显示（纯图标）\n" +
+                "• TEXT ONLY：不受限制，支持多字符", Toast.LENGTH_LONG).show();
     }
 
     private void addSampleTrendRegions() {

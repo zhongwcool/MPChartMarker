@@ -8,6 +8,7 @@ import android.graphics.Rect;
 import com.alex.klinemarker.core.IMarkerRenderer;
 import com.alex.klinemarker.data.MarkerData;
 import com.alex.klinemarker.data.MarkerShape;
+import com.alex.klinemarker.utils.TextUtils;
 
 /**
  * 纯文字标记渲染器
@@ -38,6 +39,8 @@ public class TextOnlyRenderer implements IMarkerRenderer {
             return;
         }
 
+        // TextOnlyRenderer 不限制文字长度，保持原有的多字符支持
+
         // 设置文字样式
         textPaint.setTextSize(marker.getConfig().getTextSize() * density);
         textPaint.setColor(marker.getConfig().getTextColor());
@@ -46,9 +49,8 @@ public class TextOnlyRenderer implements IMarkerRenderer {
         // 测量文字尺寸以正确定位
         textPaint.getTextBounds(text, 0, text.length(), textBounds);
 
-        // 计算文字基线位置，确保汉字正确居中
-        Paint.FontMetrics fontMetrics = textPaint.getFontMetrics();
-        float textY = centerY + (fontMetrics.bottom - fontMetrics.top) / 2 - fontMetrics.bottom;
+        // 使用改进的文字居中算法计算Y坐标，但仍然使用左对齐
+        float textY = TextUtils.calculateChineseTextBaselineY(textPaint, text, centerY);
 
         // 添加小的偏移，让文字稍微远离指示线末端
         float textX = centerX + 4 * density;

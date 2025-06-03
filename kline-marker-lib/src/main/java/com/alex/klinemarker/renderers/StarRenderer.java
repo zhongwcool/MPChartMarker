@@ -11,7 +11,7 @@ import com.alex.klinemarker.data.MarkerShape;
 
 /**
  * 五角星标记渲染器
- * 绘制五角星形状
+ * 绘制五角星形状，不支持文字绘制（纯图标）
  */
 public class StarRenderer implements IMarkerRenderer {
 
@@ -27,7 +27,7 @@ public class StarRenderer implements IMarkerRenderer {
 
     @Override
     public void drawMarker(Canvas canvas, float centerX, float centerY, MarkerData marker, Context context) {
-        // 获取标记大小 - 修复五角星过小问题
+        // 获取标记大小
         float radius = marker.getConfig().getMarkerSize() * density / 2f;
 
         // 设置颜色
@@ -37,6 +37,8 @@ public class StarRenderer implements IMarkerRenderer {
         // 创建五角星路径
         Path starPath = createStarPath(centerX, centerY, radius);
         canvas.drawPath(starPath, starPaint);
+
+        // 五角星不支持文字显示
     }
 
     /**

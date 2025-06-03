@@ -9,6 +9,7 @@ import android.graphics.Rect;
 import com.alex.klinemarker.core.IMarkerRenderer;
 import com.alex.klinemarker.data.MarkerData;
 import com.alex.klinemarker.data.MarkerShape;
+import com.alex.klinemarker.utils.TextUtils;
 
 /**
  * 菱形背景 + 文字标记渲染器
@@ -29,13 +30,19 @@ public class DiamondTextRenderer implements IMarkerRenderer {
         textPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         textPaint.setTextAlign(Paint.Align.CENTER);
         textPaint.setTypeface(android.graphics.Typeface.DEFAULT_BOLD);
+        // 优化文字渲染质量，特别适合汉字显示
+        textPaint.setSubpixelText(true);
+        textPaint.setLinearText(true);
     }
 
     @Override
     public void drawMarker(Canvas canvas, float centerX, float centerY, MarkerData marker, Context context) {
-        String text = marker.getText();
-        if (text == null || text.isEmpty()) {
-            text = "";
+        // 处理文字：限制长度（除了TEXT ONLY）
+        String originalText = marker.getText();
+        String displayText = TextUtils.processMarkerText(originalText, marker.getConfig().getShape());
+
+        if (displayText == null || displayText.isEmpty()) {
+            displayText = "";
         }
 
         // 设置文字样式
@@ -43,7 +50,7 @@ public class DiamondTextRenderer implements IMarkerRenderer {
         textPaint.setColor(marker.getConfig().getTextColor());
 
         // 计算菱形大小 - 修复菱形过小问题
-        float size = marker.getConfig().getMarkerSize() * density * 0.7f; // 从/2改为*0.7f，让菱形更大
+        float size = marker.getConfig().getMarkerSize() * density * 0.6f; // 从/2改为*0.7f，让菱形更大
 
         // 创建菱形路径
         Path diamondPath = new Path();
@@ -59,11 +66,10 @@ public class DiamondTextRenderer implements IMarkerRenderer {
         canvas.drawPath(diamondPath, backgroundPaint);
 
         // 绘制文字
-        if (marker.getConfig().isShowText() && !text.isEmpty()) {
-            textPaint.getTextBounds(text, 0, text.length(), textBounds);
-            float textHeight = textBounds.height();
-            float textY = centerY + textHeight / 2f;
-            canvas.drawText(text, centerX, textY, textPaint);
+        if (marker.getConfig().isShowText() && !displayText.isEmpty()) {
+            // 使用改进的文字居中算法，特别优化汉字显示
+            float textY = TextUtils.calculateChineseTextBaselineY(textPaint, displayText, centerY);
+            canvas.drawText(displayText, centerX, textY, textPaint);
         }
     }
 
