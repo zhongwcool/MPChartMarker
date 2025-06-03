@@ -571,14 +571,14 @@ public class FirstFragment extends Fragment {
             markers.add(MarkerData.createCustomMarker(
                     klineDataList.get(dataSize - 20).getDate(),
                     "123",  // 数字，会显示"1"
-                    MarkerPresets.fromColorIndex(0, MarkerShape.CIRCLE)  // 使用预设，自动16dp
+                    MarkerPresets.googleBlue()  // 使用谷歌蓝色预设，自动16dp
             ));
 
             // 11. 矩形 - 符号
             markers.add(MarkerData.createCustomMarker(
                     klineDataList.get(dataSize - 15).getDate(),
                     "★☆",  // 符号，会显示"★"
-                    MarkerPresets.fromColorIndex(1, MarkerShape.RECTANGLE)  // 使用预设，自动16dp
+                    MarkerPresets.sell()  // 使用卖出预设（红色矩形），自动16dp
             ));
 
             // ========== TEXT ONLY 演示（不受中文限制影响）==========

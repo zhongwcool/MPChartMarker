@@ -28,7 +28,7 @@ public class TriangleRenderer implements IMarkerRenderer {
     @Override
     public void drawMarker(Canvas canvas, float centerX, float centerY, MarkerData marker, Context context) {
         // 获取标记大小
-        float size = marker.getConfig().getMarkerSize() * density / 2;
+        float size = marker.getConfig().getMarkerSize() * density / 3;
 
         // 设置颜色
         trianglePaint.setColor(marker.getConfig().getBackgroundColor());

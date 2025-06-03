@@ -2,23 +2,54 @@
 
 一个专为MPAndroidChart设计的K线标记扩展库，可以在K线图上添加各种类型的标记和趋势区间背景，包括买入/卖出标记、数字标记、三角形标记、趋势区间阴影等。
 
+## 🚀 如何使用这个库
+
+### 最简单的使用方法（推荐新手查看）
+
+1. **查看库的详细README**：[kline-marker-lib/README.md](kline-marker-lib/README.md) - 完整的使用指南
+2. **参考完整示例**：查看 `sample/` 目录中的完整使用示例
+
+### 3分钟快速上手
+
+```java
+// 1. 创建数据适配器（告诉库如何读取您的K线数据）
+MyAdapter adapter = new MyAdapter();
+
+// 2. 初始化标记管理器
+KLineMarkerManager<MyKLineData> markerManager = 
+    new KLineMarkerManager.Builder<MyKLineData>()
+        .context(this)
+        .chart(chart)  // 您的MPAndroidChart图表
+        .dataAdapter(adapter)
+        .build();
+
+// 3. 设置K线数据
+markerManager.setKLineData(klineDataList);
+
+// 4. 添加标记
+List<MarkerData> markers = new ArrayList<>();
+markers.add(MarkerData.createCustomMarker(date, "买入", MarkerPresets.buy()));
+markers.add(MarkerData.createCustomMarker(date, "卖出", MarkerPresets.sell()));
+markerManager.setMarkers(markers);
+markerManager.refresh();
+```
+
+就这么简单！🎉
+
 ## 项目结构
 
 ```
 MPChartMarker/
 ├── app/                    # 示例应用
 ├── kline-marker-lib/       # K线标记库（核心库）
-│   ├── docs/              # 📚 完整文档
-│   │   ├── 快速开始指南.md         # 5分钟快速上手
-│   │   ├── K线标记库使用指南.md     # 完整使用文档
-│   │   └── 功能特性详解.md         # 深度技术解析
 │   ├── src/main/java/com/alex/klinemarker/
 │   │   ├── core/          # 核心渲染和配置类
 │   │   ├── data/          # 数据模型和适配器
 │   │   ├── utils/         # 工具类
 │   │   └── KLineMarkerManager.java  # 主要入口类
-│   ├── README.md          # 库说明文档
+│   ├── README.md          # 库详细说明文档
 │   └── build.gradle.kts   # 库构建配置
+├── sample/                # 完整使用示例
 └── README.md              # 本文件（项目总览）
 ```
 
@@ -72,8 +103,8 @@ markerManager.setKLineData(klineDataList);
 
 // 创建标记
 List<MarkerData> markers = new ArrayList<>();
-markers.add(new MarkerData(new Date(), MarkerData.MarkerType.BUY, "买入"));
-markers.add(new MarkerData(new Date(), MarkerData.MarkerType.SELL, "卖出"));
+markers.add(MarkerData.createCustomMarker(new Date(), "买入", MarkerPresets.buy()));
+markers.add(MarkerData.createCustomMarker(new Date(), "卖出", MarkerPresets.sell()));
 
 // 显示标记
 markerManager.setMarkers(markers);
@@ -198,11 +229,11 @@ TrendRegionConfig trendConfig = new TrendRegionConfig.Builder()
 ### 使用示例
 
 ```java
-// 使用预设标记（自动应用颜色预设）
-MarkerData.createBuyMarker(date, "B");        // 谷歌绿色
-MarkerData.createSellMarker(date, "S");       // 谷歌红色
-MarkerData.createInfoMarker(date, "i");       // 谷歌蓝色
-MarkerData.createImportantMarker(date, "★");  // 谷歌黄色
+// 使用预设标记
+MarkerData.createCustomMarker(date, "B", MarkerPresets.buy());        // 买入标记
+MarkerData.createCustomMarker(date, "S", MarkerPresets.sell());       // 卖出标记
+MarkerData.createCustomMarker(date, "i", MarkerPresets.info());       // 信息标记
+MarkerData.createCustomMarker(date, "★", MarkerPresets.important());  // 重要标记
 
 // 圆形标记大小一致性演示 - 不同字符相同大小
 MarkerData chinese = MarkerData.createCustomMarker(date, "买", MarkerPresets.googleBlue());   // 中文字符，16dp圆形
