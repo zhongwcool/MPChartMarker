@@ -70,39 +70,39 @@ public class MarkerDataService {
         // 为了确保日期匹配，我们使用偏移量来生成具体的标记日期
         java.util.Calendar markerCalendar;
 
-        // 数字标记 - 第5天、第15天、第25天
+        // 数字标记 - 改为后面的日期：倒数第30天、第20天、第10天
         markerCalendar = (java.util.Calendar) calendar.clone();
-        markerCalendar.add(java.util.Calendar.DAY_OF_YEAR, 5);
+        markerCalendar.add(java.util.Calendar.DAY_OF_YEAR, 70); // 第70天（倒数第30天）
         items.add(new MarkerResponse.MarkerItem("2024-12-15T07:36:19.755Z", dateFormat.format(markerCalendar.getTime()), 0, "1"));
 
         markerCalendar = (java.util.Calendar) calendar.clone();
-        markerCalendar.add(java.util.Calendar.DAY_OF_YEAR, 15);
+        markerCalendar.add(java.util.Calendar.DAY_OF_YEAR, 80); // 第80天（倒数第20天）
         items.add(new MarkerResponse.MarkerItem("2024-12-25T07:36:19.755Z", dateFormat.format(markerCalendar.getTime()), 0, "2"));
 
         markerCalendar = (java.util.Calendar) calendar.clone();
-        markerCalendar.add(java.util.Calendar.DAY_OF_YEAR, 25);
+        markerCalendar.add(java.util.Calendar.DAY_OF_YEAR, 90); // 第90天（倒数第10天）
         items.add(new MarkerResponse.MarkerItem("2025-01-05T07:36:19.755Z", dateFormat.format(markerCalendar.getTime()), 0, "虎虎虎"));
 
-        // 买入卖出标记 - 第20天、第35天
+        // 买入卖出标记 - 改为后面的日期：倒数第25天、第15天
         markerCalendar = (java.util.Calendar) calendar.clone();
-        markerCalendar.add(java.util.Calendar.DAY_OF_YEAR, 20);
+        markerCalendar.add(java.util.Calendar.DAY_OF_YEAR, 75); // 第75天（倒数第25天）
         items.add(new MarkerResponse.MarkerItem("2024-12-30T07:36:19.755Z", dateFormat.format(markerCalendar.getTime()), 1, "B"));
 
         markerCalendar = (java.util.Calendar) calendar.clone();
-        markerCalendar.add(java.util.Calendar.DAY_OF_YEAR, 35);
+        markerCalendar.add(java.util.Calendar.DAY_OF_YEAR, 85); // 第85天（倒数第15天）
         items.add(new MarkerResponse.MarkerItem("2025-01-10T07:36:19.755Z", dateFormat.format(markerCalendar.getTime()), 2, "S"));
 
-        // 上下三角标记 - 第45天、第55天、第65天
+        // 上下三角标记 - 改为后面的日期：倒数第12天、第8天、第5天
         markerCalendar = (java.util.Calendar) calendar.clone();
-        markerCalendar.add(java.util.Calendar.DAY_OF_YEAR, 45);
+        markerCalendar.add(java.util.Calendar.DAY_OF_YEAR, 88); // 第88天（倒数第12天）
         items.add(new MarkerResponse.MarkerItem("2025-01-20T07:36:19.755Z", dateFormat.format(markerCalendar.getTime()), 3, "激增"));
 
         markerCalendar = (java.util.Calendar) calendar.clone();
-        markerCalendar.add(java.util.Calendar.DAY_OF_YEAR, 55);
+        markerCalendar.add(java.util.Calendar.DAY_OF_YEAR, 92); // 第92天（倒数第8天）
         items.add(new MarkerResponse.MarkerItem("2025-01-30T07:36:19.755Z", dateFormat.format(markerCalendar.getTime()), 4, "陡降"));
 
         markerCalendar = (java.util.Calendar) calendar.clone();
-        markerCalendar.add(java.util.Calendar.DAY_OF_YEAR, 65);
+        markerCalendar.add(java.util.Calendar.DAY_OF_YEAR, 95); // 第95天（倒数第5天）
         items.add(new MarkerResponse.MarkerItem("2025-02-10T07:36:19.755Z", dateFormat.format(markerCalendar.getTime()), 0, "特殊标记"));
 
         return response;

@@ -26,8 +26,8 @@ public class DotRenderer implements IMarkerRenderer {
 
     @Override
     public void drawMarker(Canvas canvas, float centerX, float centerY, MarkerData marker, Context context) {
-        // 计算圆点半径 - 修复圆点过小问题
-        float radius = marker.getConfig().getMarkerSize() * density / 3f; // 从/4改为/3f，让圆点更大但仍保持小于其他标记
+        // 计算圆点半径 - 修改为与圆形标记一致的大小
+        float radius = marker.getConfig().getMarkerSize() * density / 2f; // 改为/2f，与圆形标记的最小半径一致
 
         // 设置颜色
         dotPaint.setColor(marker.getConfig().getBackgroundColor());
@@ -39,12 +39,12 @@ public class DotRenderer implements IMarkerRenderer {
 
     @Override
     public float getMarkerWidth(MarkerData marker) {
-        return marker.getConfig().getMarkerSize() * density / 1.5f; // 相应调整宽度
+        return marker.getConfig().getMarkerSize() * density; // 改为与其他标记一致
     }
 
     @Override
     public float getMarkerHeight(MarkerData marker) {
-        return marker.getConfig().getMarkerSize() * density / 1.5f; // 相应调整高度
+        return marker.getConfig().getMarkerSize() * density; // 改为与其他标记一致
     }
 
     @Override

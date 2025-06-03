@@ -391,63 +391,77 @@ public class FirstFragment extends Fragment {
             }
 
             // ========== 预定义标记样式 ==========
+            // 将标记集中在数据的后半部分（最新数据/最右侧）
 
-            // 1. 买入标记
+            // 1. 买入标记 - 恢复使用预设配置
             markers.add(MarkerData.createBuyMarker(
-                    klineDataList.get(5).getDate(),
+                    klineDataList.get(dataSize - 45).getDate(),  // 倒数第45个
                     "B"  // 单个字母
             ));
 
             // 2. 卖出标记
             markers.add(MarkerData.createSellMarker(
-                    klineDataList.get(15).getDate(),
+                    klineDataList.get(dataSize - 35).getDate(),  // 倒数第35个
                     "S"  // 单个字母
             ));
 
             // 3. 事件标记
             markers.add(MarkerData.createEventMarker(
-                    klineDataList.get(10).getDate(),
+                    klineDataList.get(dataSize - 40).getDate(),  // 倒数第40个
                     "E"  // 单个字母
             ));
 
             // 4. 警告标记
             markers.add(MarkerData.createWarningMarker(
-                    klineDataList.get(20).getDate(),
+                    klineDataList.get(dataSize - 30).getDate(),  // 倒数第30个
                     "!"  // 符号
             ));
 
             // 5. 信息标记
             markers.add(MarkerData.createInfoMarker(
-                    klineDataList.get(25).getDate(),
+                    klineDataList.get(dataSize - 25).getDate(),  // 倒数第25个
                     "i"  // 单个字母
             ));
 
             // 6. 止损标记
             markers.add(MarkerData.createStopLossMarker(
-                    klineDataList.get(40).getDate(),
+                    klineDataList.get(dataSize - 10).getDate(),  // 倒数第10个
                     "L"  // 单个字母
             ));
 
             // 7. 止盈标记
             markers.add(MarkerData.createTakeProfitMarker(
-                    klineDataList.get(45).getDate(),
+                    klineDataList.get(dataSize - 5).getDate(),   // 倒数第5个
                     "P"  // 单个字母
             ));
 
             // 8. 纯文字标记 - 支持多个汉字
             markers.add(MarkerData.createTextMarker(
-                    klineDataList.get(12).getDate(),
+                    klineDataList.get(dataSize - 38).getDate(),  // 倒数第38个
                     "重要消息"  // 多个汉字演示
             ));
 
-            // 9. 圆点标记
-            markers.add(MarkerData.createDotMarker(klineDataList.get(22).getDate()));
+            // 9. 圆点标记 - 改为自定义配置，统一尺寸
+            markers.add(new MarkerData(
+                    klineDataList.get(dataSize - 28).getDate(), // 倒数第28个
+                    "",
+                    new com.alex.klinemarker.data.MarkerConfig.Builder()
+                            .shape(MarkerShape.DOT)
+                            .position(MarkerPosition.AUTO)
+                            .backgroundColor(0xFF2196F3) // 改为鲜明的蓝色，更易辨识
+                            .showText(false)
+                            .showLine(true)
+                            .lineColor(0xFF1976D2)
+                            .lineLength(LineLength.SHORT)
+                            .markerSize(12f) // 统一尺寸为12f，与菱形标记一致
+                            .build()
+            ));
 
             // ========== 多汉字纯文字标记演示 ==========
 
             // 添加更多多汉字文字标记示例
             markers.add(new MarkerData(
-                    klineDataList.get(7).getDate(),
+                    klineDataList.get(dataSize - 43).getDate(),  // 倒数第43个
                     "业绩公告",
                     new com.alex.klinemarker.data.MarkerConfig.Builder()
                             .shape(MarkerShape.NONE)
@@ -460,7 +474,7 @@ public class FirstFragment extends Fragment {
             ));
 
             markers.add(new MarkerData(
-                    klineDataList.get(36).getDate(),
+                    klineDataList.get(dataSize - 14).getDate(),  // 倒数第14个
                     "分红除权",
                     new com.alex.klinemarker.data.MarkerConfig.Builder()
                             .shape(MarkerShape.NONE)
@@ -473,7 +487,7 @@ public class FirstFragment extends Fragment {
             ));
 
             markers.add(new MarkerData(
-                    klineDataList.get(44).getDate(),
+                    klineDataList.get(dataSize - 6).getDate(),   // 倒数第6个
                     "主力资金流入",
                     new com.alex.klinemarker.data.MarkerConfig.Builder()
                             .shape(MarkerShape.NONE)
@@ -487,14 +501,14 @@ public class FirstFragment extends Fragment {
 
             // ========== 自定义标记样式 ==========
 
-            // 10. 五角星标记
+            // 10. 五角星标记 - 改为更鲜明的颜色和统一尺寸
             markers.add(new MarkerData(
-                    klineDataList.get(18).getDate(),
+                    klineDataList.get(dataSize - 32).getDate(),  // 倒数第32个
                     "",
                     new com.alex.klinemarker.data.MarkerConfig.Builder()
                             .shape(MarkerShape.STAR)
-                            .backgroundColor(0xFFFFD700)
-                            .markerSize(12f) // 调整尺寸 (从8f改为12f)
+                            .backgroundColor(0xFFFF6600) // 改为鲜明的橙色，更易辨识
+                            .markerSize(12f) // 统一尺寸为12f，与菱形标记一致
                             .showText(false)
                             .lineLength(LineLength.MEDIUM)
                             .build()
@@ -502,7 +516,7 @@ public class FirstFragment extends Fragment {
 
             // 11. 十字标记
             markers.add(new MarkerData(
-                    klineDataList.get(28).getDate(),
+                    klineDataList.get(dataSize - 22).getDate(),  // 倒数第22个
                     "",
                     new com.alex.klinemarker.data.MarkerConfig.Builder()
                             .shape(MarkerShape.CROSS)
@@ -513,27 +527,27 @@ public class FirstFragment extends Fragment {
                             .build()
             ));
 
-            // 12. 箭头向上
+            // 12. 箭头向上 - 统一尺寸
             markers.add(new MarkerData(
-                    klineDataList.get(32).getDate(),
+                    klineDataList.get(dataSize - 18).getDate(),  // 倒数第18个
                     "",
                     new com.alex.klinemarker.data.MarkerConfig.Builder()
                             .shape(MarkerShape.ARROW_UP)
-                            .backgroundColor(0xFF8BC34A)
-                            .markerSize(12f) // 调整尺寸 (从8f改为12f)
+                            .backgroundColor(0xFF00C853) // 改为更鲜明的绿色
+                            .markerSize(12f) // 统一尺寸为12f，与菱形标记一致
                             .showText(false)
                             .lineLength(LineLength.SHORT)
                             .build()
             ));
 
-            // 13. 箭头向下
+            // 13. 箭头向下 - 统一尺寸
             markers.add(new MarkerData(
-                    klineDataList.get(38).getDate(),
+                    klineDataList.get(dataSize - 12).getDate(),  // 倒数第12个
                     "",
                     new com.alex.klinemarker.data.MarkerConfig.Builder()
                             .shape(MarkerShape.ARROW_DOWN)
-                            .backgroundColor(0xFFE91E63)
-                            .markerSize(12f) // 调整尺寸 (从8f改为12f)
+                            .backgroundColor(0xFFFF1744) // 改为更鲜明的红色
+                            .markerSize(12f) // 统一尺寸为12f，与菱形标记一致
                             .showText(false)
                             .lineLength(LineLength.SHORT)
                             .build()
@@ -541,7 +555,7 @@ public class FirstFragment extends Fragment {
 
             // 14. 菱形标记
             markers.add(new MarkerData(
-                    klineDataList.get(30).getDate(),
+                    klineDataList.get(dataSize - 20).getDate(),  // 倒数第20个
                     "D",  // 单个字母
                     new com.alex.klinemarker.data.MarkerConfig.Builder()
                             .shape(MarkerShape.DIAMOND)
@@ -553,26 +567,26 @@ public class FirstFragment extends Fragment {
                             .build()
             ));
 
-            // 15. 三角形向上
+            // 15. 三角形向上 - 改为更鲜明的颜色
             markers.add(new MarkerData(
-                    klineDataList.get(35).getDate(),
+                    klineDataList.get(dataSize - 15).getDate(),  // 倒数第15个
                     "",
                     new com.alex.klinemarker.data.MarkerConfig.Builder()
                             .shape(MarkerShape.TRIANGLE_UP)
-                            .backgroundColor(0xFF00C853)
+                            .backgroundColor(0xFF4CAF50) // 改为更鲜明的绿色，更易辨识
                             .markerSize(12f) // 调整尺寸 (从8f改为12f)
                             .showText(false)
                             .lineLength(LineLength.NONE)
                             .build()
             ));
 
-            // 16. 三角形向下
+            // 16. 三角形向下 - 改为更鲜明的颜色
             markers.add(new MarkerData(
-                    klineDataList.get(42).getDate(),
+                    klineDataList.get(dataSize - 8).getDate(),   // 倒数第8个
                     "",
                     new com.alex.klinemarker.data.MarkerConfig.Builder()
                             .shape(MarkerShape.TRIANGLE_DOWN)
-                            .backgroundColor(0xFFFF1744)
+                            .backgroundColor(0xFFE53935) // 改为更鲜明的红色，更易辨识
                             .markerSize(12f) // 调整尺寸 (从8f改为12f)
                             .showText(false)
                             .lineLength(LineLength.NONE)
@@ -583,7 +597,7 @@ public class FirstFragment extends Fragment {
 
             // 17. 无虚线示例
             markers.add(new MarkerData(
-                    klineDataList.get(2).getDate(),
+                    klineDataList.get(dataSize - 2).getDate(),  // 倒数第2个
                     "N",  // 单个字母
                     new com.alex.klinemarker.data.MarkerConfig.Builder()
                             .shape(MarkerShape.RECTANGLE)
@@ -597,7 +611,7 @@ public class FirstFragment extends Fragment {
 
             // 18. 超长虚线示例
             markers.add(new MarkerData(
-                    klineDataList.get(47).getDate(),
+                    klineDataList.get(dataSize - 47).getDate(),  // 倒数第47个
                     "X",  // 单个字母
                     new com.alex.klinemarker.data.MarkerConfig.Builder()
                             .shape(MarkerShape.CIRCLE)
@@ -613,7 +627,7 @@ public class FirstFragment extends Fragment {
 
             // 19. 自定义买入标记
             markers.add(MarkerData.createCustomMarker(
-                    klineDataList.get(8).getDate(),
+                    klineDataList.get(dataSize - 8).getDate(),  // 倒数第8个
                     "C",  // 单个字母
                     MarkerPresets.customize(MarkerPresets.buy())
                             .backgroundColor(0xFF00E676)
@@ -624,7 +638,7 @@ public class FirstFragment extends Fragment {
 
             // 20. 自定义警告标记
             markers.add(MarkerData.createCustomMarker(
-                    klineDataList.get(48).getDate(),
+                    klineDataList.get(dataSize - 48).getDate(),  // 倒数第48个
                     "W",  // 单个字母
                     MarkerPresets.customize(MarkerPresets.warning())
                             .position(MarkerPosition.BELOW)

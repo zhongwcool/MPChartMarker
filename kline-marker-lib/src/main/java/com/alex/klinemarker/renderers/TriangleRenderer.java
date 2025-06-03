@@ -4,6 +4,7 @@ import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Path;
+import android.graphics.Rect;
 
 import com.alex.klinemarker.core.IMarkerRenderer;
 import com.alex.klinemarker.data.MarkerData;
@@ -11,18 +12,24 @@ import com.alex.klinemarker.data.MarkerShape;
 
 /**
  * 三角形标记渲染器
- * 支持向上和向下三角形
+ * 支持向上和向下三角形，并支持文字绘制
  */
 public class TriangleRenderer implements IMarkerRenderer {
 
     private final Paint trianglePaint;
+    private final Paint textPaint;
     private final float density;
+    private final Rect textBounds = new Rect();
 
     public TriangleRenderer(float density) {
         this.density = density;
 
         trianglePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         trianglePaint.setStyle(Paint.Style.FILL);
+
+        textPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        textPaint.setTextAlign(Paint.Align.CENTER);
+        textPaint.setTypeface(android.graphics.Typeface.DEFAULT_BOLD);
     }
 
     @Override
@@ -37,6 +44,22 @@ public class TriangleRenderer implements IMarkerRenderer {
         // 创建三角形路径
         Path trianglePath = createTrianglePath(centerX, centerY, size, marker.getConfig().getShape());
         canvas.drawPath(trianglePath, trianglePaint);
+
+        // 绘制文字（如果需要）
+        if (marker.getConfig().isShowText() && marker.getText() != null && !marker.getText().isEmpty()) {
+            // 设置文字样式
+            textPaint.setTextSize(marker.getConfig().getTextSize() * density);
+            textPaint.setColor(marker.getConfig().getTextColor());
+
+            // 测量文字尺寸
+            String text = marker.getText();
+            textPaint.getTextBounds(text, 0, text.length(), textBounds);
+            float textHeight = textBounds.height();
+
+            // 计算文字基线位置
+            float textY = centerY + textHeight / 2f;
+            canvas.drawText(text, centerX, textY, textPaint);
+        }
     }
 
     /**

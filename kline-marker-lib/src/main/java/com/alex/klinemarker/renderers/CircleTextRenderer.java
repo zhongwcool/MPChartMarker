@@ -27,6 +27,7 @@ public class CircleTextRenderer implements IMarkerRenderer {
 
         textPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         textPaint.setTextAlign(Paint.Align.CENTER);
+        textPaint.setTypeface(android.graphics.Typeface.DEFAULT_BOLD);
     }
 
     @Override

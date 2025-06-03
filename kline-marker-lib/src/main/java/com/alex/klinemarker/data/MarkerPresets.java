@@ -7,13 +7,13 @@ package com.alex.klinemarker.data;
 public class MarkerPresets {
 
     /**
-     * 买入标记 - 绿色向上三角形
+     * 买入标记 - 深绿色向上三角形（提高对比度）
      */
     public static MarkerConfig buy() {
         return new MarkerConfig.Builder()
                 .shape(MarkerShape.TRIANGLE_UP)
                 .position(MarkerPosition.BELOW)
-                .backgroundColor(0xFF4CAF50)  // 绿色
+                .backgroundColor(0xFF2E7D32)  // 改为深绿色，提高对比度
                 .showText(true)
                 .showLine(true)
                 .markerSize(12f)  // 调整尺寸 (从8f改为12f)
@@ -39,13 +39,13 @@ public class MarkerPresets {
     }
 
     /**
-     * 警告标记 - 橙色圆形带感叹号
+     * 警告标记 - 深橙色圆形带感叹号（改为更醒目的深橙色）
      */
     public static MarkerConfig warning() {
         return new MarkerConfig.Builder()
                 .shape(MarkerShape.CIRCLE)
                 .position(MarkerPosition.ABOVE)
-                .backgroundColor(0xFFFF9800)  // 橙色
+                .backgroundColor(0xFFE65100)  // 改为深橙色，更醒目
                 .textColor(0xFFFFFFFF)
                 .showText(true)
                 .showLine(true)
@@ -62,7 +62,7 @@ public class MarkerPresets {
         return new MarkerConfig.Builder()
                 .shape(MarkerShape.CIRCLE)
                 .position(MarkerPosition.AUTO)
-                .backgroundColor(0xFF2196F3)  // 蓝色
+                .backgroundColor(0xFF1976D2)  // 改为深蓝色，提高对比度
                 .textColor(0xFFFFFFFF)
                 .showText(true)
                 .showLine(true)
@@ -73,13 +73,13 @@ public class MarkerPresets {
     }
 
     /**
-     * 成功标记 - 绿色圆形带勾
+     * 成功标记 - 深绿色圆形带勾
      */
     public static MarkerConfig success() {
         return new MarkerConfig.Builder()
                 .shape(MarkerShape.CIRCLE)
                 .position(MarkerPosition.ABOVE)
-                .backgroundColor(0xFF4CAF50)  // 绿色
+                .backgroundColor(0xFF2E7D32)  // 改为深绿色，提高对比度
                 .textColor(0xFFFFFFFF)
                 .showText(true)
                 .showLine(true)
@@ -107,13 +107,13 @@ public class MarkerPresets {
     }
 
     /**
-     * 事件标记 - 紫色菱形
+     * 事件标记 - 深紫色菱形（提高对比度）
      */
     public static MarkerConfig event() {
         return new MarkerConfig.Builder()
                 .shape(MarkerShape.DIAMOND)
                 .position(MarkerPosition.AUTO)
-                .backgroundColor(0xFF9C27B0)  // 紫色
+                .backgroundColor(0xFF6A1B9A)  // 改为深紫色，提高对比度
                 .textColor(0xFFFFFFFF)
                 .showText(true)
                 .showLine(true)
@@ -175,13 +175,13 @@ public class MarkerPresets {
     }
 
     /**
-     * 重要标记 - 黄色五角星
+     * 重要标记 - 金色五角星（原黄色改为更醒目的金色）
      */
     public static MarkerConfig important() {
         return new MarkerConfig.Builder()
                 .shape(MarkerShape.STAR)
                 .position(MarkerPosition.ABOVE)
-                .backgroundColor(0xFFFFEB3B)  // 黄色
+                .backgroundColor(0xFFFF8F00)  // 改为金色，更加醒目易识别
                 .showText(true)
                 .showLine(true)
                 .markerSize(12f)  // 调整尺寸 (从8f改为12f)
