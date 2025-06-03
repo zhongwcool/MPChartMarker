@@ -11,6 +11,7 @@ import com.alex.klinemarker.data.MarkerShape;
 /**
  * 圆点标记渲染器
  * 绘制简单的圆点标记
+ * 注意：圆点标记设计为使用 LineLength.NONE，即保持短距离但不显示连接线
  */
 public class DotRenderer implements IMarkerRenderer {
 
@@ -27,7 +28,7 @@ public class DotRenderer implements IMarkerRenderer {
     @Override
     public void drawMarker(Canvas canvas, float centerX, float centerY, MarkerData marker, Context context) {
         // 计算圆点半径 - 修改为与圆形标记一致的大小
-        float radius = marker.getConfig().getMarkerSize() * density / 2f; // 改为/2f，与圆形标记的最小半径一致
+        float radius = marker.getConfig().getMarkerSize() * density / 4f; // 改为/2f，与圆形标记的最小半径一致
 
         // 设置颜色
         dotPaint.setColor(marker.getConfig().getBackgroundColor());

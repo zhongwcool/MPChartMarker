@@ -6,7 +6,7 @@ package com.alex.klinemarker.data;
  */
 public enum LineLength {
     /**
-     * 极短距离 - 标记紧贴K线数据点，虚线很短但仍连接
+     * 无连接线 - 标记与K线保持短距离但不显示连接线
      */
     NONE,
 

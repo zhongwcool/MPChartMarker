@@ -26,10 +26,10 @@ public class LineLengthUtils {
         float dpValue;
         switch (lineLength) {
             case NONE:
-                dpValue = 3f;   // 极短距离，紧贴但仍有连接线
+                dpValue = 8f;   // 短距离但不显示虚线，从3f改为8f
                 break;
             case SHORT:
-                dpValue = 8f;   // 短距离
+                dpValue = 12f;   // 短距离，从8f改为12f
                 break;
             case MEDIUM:
                 dpValue = 20f;  // 中等距离（默认）
@@ -65,12 +65,12 @@ public class LineLengthUtils {
 
     /**
      * 检查是否需要绘制虚线
-     * 注意：所有类型都需要绘制虚线，只是长度不同
+     * NONE类型不绘制虚线，其他类型都绘制虚线
      *
      * @param lineLength 虚线长度类型
-     * @return 始终返回true，因为都需要连接线
+     * @return 是否需要绘制连接线
      */
     public static boolean shouldDrawLine(LineLength lineLength) {
-        return true; // 所有类型都绘制连接线，只是距离不同
+        return lineLength != null && lineLength != LineLength.NONE; // NONE类型不绘制连接线
     }
 } 

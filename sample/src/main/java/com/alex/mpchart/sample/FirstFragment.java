@@ -663,7 +663,7 @@ public class FirstFragment extends Fragment {
                             .showText(false)
                             .showLine(true)
                             .lineColor(0xFF999999)
-                            .lineLength(LineLength.SHORT)
+                            .lineLength(LineLength.NONE)  // 固定使用NONE：短距离且不显示虚线
                             .markerSize(12f)
                             .build()
             ));

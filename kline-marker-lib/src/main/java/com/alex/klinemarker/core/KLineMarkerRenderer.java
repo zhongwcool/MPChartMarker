@@ -304,6 +304,11 @@ public class KLineMarkerRenderer<T> implements IMarker {
             return;
         }
 
+        // 检查LineLength是否允许绘制连接线（LineLength.NONE不绘制连接线）
+        if (!com.alex.klinemarker.utils.LineLengthUtils.shouldDrawLine(marker.getConfig().getLineLength())) {
+            return;
+        }
+
         // 设置连接线颜色
         int lineColor = marker.getConfig().getLineColor();
         dashLinePaint.setColor(lineColor);
@@ -342,6 +347,11 @@ public class KLineMarkerRenderer<T> implements IMarker {
     private void drawTextOnlyConnectionLine(Canvas canvas, MarkerRenderPosition position, MarkerData marker) {
         // 如果实际虚线长度为0，不绘制连接线
         if (position.actualLineLength <= 0) {
+            return;
+        }
+
+        // 检查LineLength是否允许绘制连接线（LineLength.NONE不绘制连接线）
+        if (!com.alex.klinemarker.utils.LineLengthUtils.shouldDrawLine(marker.getConfig().getLineLength())) {
             return;
         }
 
