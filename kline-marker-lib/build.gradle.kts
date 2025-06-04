@@ -15,7 +15,7 @@ android {
         consumerProguardFiles("consumer-rules.pro")
 
         // 添加版本信息
-        version = "1.0.0"
+        version = "1.0.1"
     }
 
     testOptions {
@@ -70,7 +70,7 @@ publishing {
             // 发布信息
             groupId = "com.alex.klinemarker"
             artifactId = "kline-marker-lib"
-            version = "1.0.0"
+            version = "1.0.1"
 
             // 绑定 Android Library 的发布组件
             afterEvaluate {
@@ -109,3 +109,4 @@ publishing {
 }
 
 // 发布配置可以后续添加 
+
