@@ -2,6 +2,54 @@
 
 一个专为MPAndroidChart设计的K线标记扩展库，可以在K线图上添加各种类型的标记和趋势区间背景，包括买入/卖出标记、数字标记、三角形标记、趋势区间阴影等。
 
+## 📦 安装
+
+### 方式一：通过 JitPack（推荐）
+
+1. 在项目级 `build.gradle.kts` 中添加 JitPack 仓库：
+
+```kotlin
+repositories {
+    google()
+    mavenCentral()
+    maven { url = uri("https://jitpack.io") }
+}
+```
+
+2. 在 app 模块的 `build.gradle.kts` 中添加依赖：
+
+```kotlin
+dependencies {
+    implementation("com.github.zhongwcool:MPChartMarker:v1.0.0")
+}
+```
+
+### 方式二：本地 Maven 仓库（开发测试）
+
+```kotlin
+repositories {
+    google()
+    mavenCentral()
+    mavenLocal() // 添加本地 Maven 仓库
+}
+
+dependencies {
+    implementation("com.alex.klinemarker:kline-marker-lib:1.0.0")
+}
+```
+
+### 方式三：作为模块引入
+
+```kotlin
+// settings.gradle.kts
+include(":kline-marker-lib")
+
+// app/build.gradle.kts
+dependencies {
+    implementation(project(":kline-marker-lib"))
+}
+```
+
 ## 🚀 如何使用这个库
 
 ### 最简单的使用方法（推荐新手查看）

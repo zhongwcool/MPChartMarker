@@ -1,0 +1,19 @@
+# JitPack 配置文件
+# 指定构建环境和 Java 版本
+
+# 使用 Ubuntu 20.04 和 JDK 17
+jdk:
+  - openjdk17
+
+# 构建前的准备命令
+before_install:
+  - echo "准备构建 KLine Marker Library"
+
+# 构建命令
+install:
+  - echo "开始构建..."
+  - ./gradlew :kline-marker-lib:publishToMavenLocal
+
+# 环境变量
+env:
+  - TERM=dumb 
